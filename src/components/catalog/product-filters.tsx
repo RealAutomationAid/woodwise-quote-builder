@@ -94,14 +94,14 @@ export function ProductFilters({
         <div className="hidden md:flex flex-wrap gap-4 mt-2">
           <div className="flex-1 min-w-[150px]">
             <Select
-              value={filters.category || ""}
-              onValueChange={(value) => onFilterChange({ ...filters, category: value || null })}
+              value={filters.category || "all-categories"}
+              onValueChange={(value) => onFilterChange({ ...filters, category: value === "all-categories" ? null : value })}
             >
               <SelectTrigger>
                 <SelectValue placeholder="All Categories" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Categories</SelectItem>
+                <SelectItem value="all-categories">All Categories</SelectItem>
                 {categories.map((category) => (
                   <SelectItem key={category} value={category}>
                     {category}
@@ -113,14 +113,14 @@ export function ProductFilters({
           
           <div className="flex-1 min-w-[150px]">
             <Select
-              value={filters.materialType || ""}
-              onValueChange={(value) => onFilterChange({ ...filters, materialType: value || null })}
+              value={filters.materialType || "all-materials"}
+              onValueChange={(value) => onFilterChange({ ...filters, materialType: value === "all-materials" ? null : value })}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Material Type" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Materials</SelectItem>
+                <SelectItem value="all-materials">All Materials</SelectItem>
                 {materials.map((material) => (
                   <SelectItem key={material} value={material}>
                     {material}
@@ -173,14 +173,14 @@ function MobileFilters({
         <div className="space-y-2">
           <Label htmlFor="category-mobile">Category</Label>
           <Select
-            value={filters.category || ""}
-            onValueChange={(value) => onFilterChange({ ...filters, category: value || null })}
+            value={filters.category || "all-categories"}
+            onValueChange={(value) => onFilterChange({ ...filters, category: value === "all-categories" ? null : value })}
           >
             <SelectTrigger id="category-mobile">
               <SelectValue placeholder="All Categories" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Categories</SelectItem>
+              <SelectItem value="all-categories">All Categories</SelectItem>
               {categories.map((category) => (
                 <SelectItem key={category} value={category}>
                   {category}
@@ -193,14 +193,14 @@ function MobileFilters({
         <div className="space-y-2">
           <Label htmlFor="material-mobile">Material Type</Label>
           <Select
-            value={filters.materialType || ""}
-            onValueChange={(value) => onFilterChange({ ...filters, materialType: value || null })}
+            value={filters.materialType || "all-materials"}
+            onValueChange={(value) => onFilterChange({ ...filters, materialType: value === "all-materials" ? null : value })}
           >
             <SelectTrigger id="material-mobile">
               <SelectValue placeholder="Material Type" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Materials</SelectItem>
+              <SelectItem value="all-materials">All Materials</SelectItem>
               {materials.map((material) => (
                 <SelectItem key={material} value={material}>
                   {material}
