@@ -52,6 +52,16 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
+				// Woodwise custom colors
+				woodwise: {
+					background: '#F8F8F8',
+					card: '#FFFFFF',
+					text: '#333333',
+					accent: '#556B2F',
+					brown: '#8B4513',
+					border: '#DDDDDD',
+					light: '#F5F5DC'
+				},
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
 					foreground: 'hsl(var(--sidebar-foreground))',
