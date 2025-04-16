@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { MainHeader } from "@/components/layout/main-header";
 import { MainFooter } from "@/components/layout/main-footer";
@@ -171,9 +170,7 @@ const CatalogPage = () => {
   return (
     <div className="min-h-screen flex flex-col bg-woodwise-background">
       <MainHeader 
-        isLoggedIn={true} 
         quoteItemCount={quoteItems.length} 
-        onLogout={() => navigate("/")} 
       />
       
       <ProductFilters 

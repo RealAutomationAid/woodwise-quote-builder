@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { MainHeader } from "@/components/layout/main-header";
 import { MainFooter } from "@/components/layout/main-footer";
@@ -132,8 +131,7 @@ const QuotesHistoryPage = () => {
   return (
     <div className="min-h-screen flex flex-col bg-woodwise-background">
       <MainHeader 
-        isLoggedIn={true} 
-        onLogout={() => navigate("/")} 
+        quoteItemCount={quotes.length} 
       />
       
       <main className="flex-1 container mx-auto px-4 py-6">
