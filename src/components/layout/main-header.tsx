@@ -1,3 +1,4 @@
+
 import { Link } from "react-router-dom";
 import { Logo } from "@/components/ui/logo";
 import { Button } from "@/components/ui/button";
@@ -116,10 +117,7 @@ export function MainHeader({ quoteItemCount = 0 }: MainHeaderProps) {
                     <Button 
                       variant="ghost" 
                       className="flex justify-start px-0 hover:bg-transparent"
-                      onClick={() => {
-                        if (onLogout) onLogout();
-                        setIsMobileMenuOpen(false);
-                      }}
+                      onClick={handleLogout}
                     >
                       <LogOut className="h-5 w-5 mr-2" />
                       <span className="text-xl">Logout</span>

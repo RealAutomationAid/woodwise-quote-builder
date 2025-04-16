@@ -13,6 +13,7 @@ interface Quote {
   total_amount: number;
   status: string;
   created_at: string;
+  user_id: string;
   profiles: {
     id: string;
   };
@@ -31,7 +32,7 @@ const AdminQuotesPage = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data as Quote[];
+      return data as unknown as Quote[];
     },
   });
 

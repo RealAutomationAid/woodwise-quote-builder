@@ -94,11 +94,7 @@ const QuotePage = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-woodwise-background">
-      <MainHeader 
-        isLoggedIn={true} 
-        quoteItemCount={quoteItems.length} 
-        onLogout={() => navigate("/")} 
-      />
+      <MainHeader quoteItemCount={quoteItems.length} />
       
       <main className="flex-1 container mx-auto px-4 py-6">
         <div className="flex items-center gap-4 mb-6">
