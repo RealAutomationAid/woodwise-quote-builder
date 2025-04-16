@@ -1,1 +1,8 @@
+
 project_id = "frfplhezrpppfzfungwk"
+
+[functions.notify-quote-submitted]
+verify_jwt = true
+
+[functions.search-products]
+verify_jwt = false

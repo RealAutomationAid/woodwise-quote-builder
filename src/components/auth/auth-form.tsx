@@ -1,3 +1,4 @@
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -67,11 +68,15 @@ export function AuthForm() {
 
   async function onRegisterSubmit(values: z.infer<typeof registerSchema>) {
     try {
-      await signUp(values.email, values.password);
+      // First register the user
+      const { error } = await signUp(values.email, values.password);
+      if (error) throw error;
       
+      // Get the current user to update their profile
       const { data: { user } } = await supabase.auth.getUser();
       
       if (user) {
+        // Update the profile with first and last name
         const { error: profileError } = await supabase
           .from('profiles')
           .update({
@@ -96,8 +101,23 @@ export function AuthForm() {
       toast.error("Please enter your email address first");
       return;
     }
-    console.log("Password reset request for:", email);
-    toast.success("Password reset link sent to your email");
+    
+    // Call our new edge function
+    resetPassword(email);
+  }
+  
+  async function resetPassword(email: string) {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      
+      if (error) throw error;
+      
+      toast.success("Password reset link sent to your email");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to send reset link");
+    }
   }
 
   return (
@@ -181,7 +201,7 @@ export function AuthForm() {
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input placeholder="email@example.com" {...field} />
+                    <Input placeholder="email@example.com" type="email" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
