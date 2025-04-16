@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email" }),
@@ -66,10 +67,10 @@ export function AuthForm() {
 
   async function onRegisterSubmit(values: z.infer<typeof registerSchema>) {
     try {
-      const { error } = await signUp(values.email, values.password);
-      if (error) throw error;
-
+      await signUp(values.email, values.password);
+      
       const { data: { user } } = await supabase.auth.getUser();
+      
       if (user) {
         const { error: profileError } = await supabase
           .from('profiles')
