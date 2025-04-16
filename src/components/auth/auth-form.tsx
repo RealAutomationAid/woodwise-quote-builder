@@ -56,7 +56,17 @@ export function AuthForm() {
     },
   });
 
+  // Reset form state when toggling between login/register
+  function handleToggleLogin(val: boolean) {
+    setIsLogin(val);
+    setTimeout(() => {
+      loginForm.reset();
+      registerForm.reset();
+    }, 0);
+  }
+
   async function onLoginSubmit(values: z.infer<typeof loginSchema>) {
+    console.log('Login submit values:', values); // Debug log
     try {
       await signIn(values.email, values.password);
       toast.success("Login successful!");
@@ -66,6 +76,7 @@ export function AuthForm() {
   }
 
   async function onRegisterSubmit(values: z.infer<typeof registerSchema>) {
+    console.log('Register submit values:', values); // Debug log
     try {
       const { data, error } = await supabase.auth.signUp({
         email: values.email,
@@ -92,7 +103,7 @@ export function AuthForm() {
         if (profileError) throw profileError;
 
         toast.success("Registration successful! You can now log in.");
-        setIsLogin(true);
+        handleToggleLogin(true);
       }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to register");
@@ -261,7 +272,7 @@ export function AuthForm() {
               <Button 
                 variant="link" 
                 className="text-sm text-woodwise-accent p-0"
-                onClick={() => setIsLogin(false)}
+                onClick={() => handleToggleLogin(false)}
               >
                 Register here
               </Button>
@@ -273,7 +284,7 @@ export function AuthForm() {
             <Button 
               variant="link" 
               className="text-sm text-woodwise-accent p-0"
-              onClick={() => setIsLogin(true)}
+              onClick={() => handleToggleLogin(true)}
             >
               Login here
             </Button>
