@@ -69,27 +69,35 @@ export function AuthForm() {
   async function onRegisterSubmit(values: z.infer<typeof registerSchema>) {
     try {
       // First register the user
-      const { error } = await signUp(values.email, values.password);
+      const { data, error } = await supabase.auth.signUp({
+        email: values.email,
+        password: values.password,
+        options: {
+          data: {
+            first_name: values.firstName,
+            last_name: values.lastName
+          }
+        }
+      });
+
       if (error) throw error;
       
-      // Get the current user to update their profile
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (user) {
+      // Check if user exists and was created
+      if (data.user) {
         // Update the profile with first and last name
         const { error: profileError } = await supabase
           .from('profiles')
-          .update({
+          .upsert({
+            id: data.user.id,
             first_name: values.firstName,
             last_name: values.lastName
-          })
-          .eq('id', user.id);
+          });
 
         if (profileError) throw profileError;
-      }
 
-      toast.success("Registration successful! You can now log in.");
-      setIsLogin(true);
+        toast.success("Registration successful! You can now log in.");
+        setIsLogin(true);
+      }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to register");
     }
