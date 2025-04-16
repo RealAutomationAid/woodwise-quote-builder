@@ -1,4 +1,3 @@
-
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -15,6 +14,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email" }),
@@ -31,12 +31,9 @@ const registerSchema = z.object({
   path: ["confirmPassword"],
 });
 
-type AuthFormProps = {
-  onSuccess?: () => void;
-}
-
-export function AuthForm({ onSuccess }: AuthFormProps) {
+export function AuthForm() {
   const [isLogin, setIsLogin] = useState(true);
+  const { signIn, signUp } = useAuth();
   
   const loginForm = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
@@ -56,18 +53,23 @@ export function AuthForm({ onSuccess }: AuthFormProps) {
     },
   });
 
-  function onLoginSubmit(values: z.infer<typeof loginSchema>) {
-    // This would connect to a real authentication system
-    console.log("Login attempt:", values);
-    toast.success("Login successful!");
-    if (onSuccess) onSuccess();
+  async function onLoginSubmit(values: z.infer<typeof loginSchema>) {
+    try {
+      await signIn(values.email, values.password);
+      toast.success("Login successful!");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to login");
+    }
   }
 
-  function onRegisterSubmit(values: z.infer<typeof registerSchema>) {
-    // This would connect to a real registration system
-    console.log("Register attempt:", values);
-    toast.success("Registration successful! You can now log in.");
-    setIsLogin(true);
+  async function onRegisterSubmit(values: z.infer<typeof registerSchema>) {
+    try {
+      await signUp(values.email, values.password);
+      toast.success("Registration successful! You can now log in.");
+      setIsLogin(true);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to register");
+    }
   }
 
   function handleForgotPassword() {

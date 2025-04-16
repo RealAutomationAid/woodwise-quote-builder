@@ -1,19 +1,23 @@
-
 import { Link } from "react-router-dom";
 import { Logo } from "@/components/ui/logo";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart, User, LogOut, Menu } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 
 type MainHeaderProps = {
-  isLoggedIn?: boolean;
-  onLogout?: () => void;
   quoteItemCount?: number;
 };
 
-export function MainHeader({ isLoggedIn = false, onLogout, quoteItemCount = 0 }: MainHeaderProps) {
+export function MainHeader({ quoteItemCount = 0 }: MainHeaderProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { user, isAdmin, signOut } = useAuth();
+
+  const handleLogout = async () => {
+    await signOut();
+    setIsMobileMenuOpen(false);
+  };
 
   return (
     <header className="border-b border-border bg-white sticky top-0 z-30">
@@ -27,10 +31,17 @@ export function MainHeader({ isLoggedIn = false, onLogout, quoteItemCount = 0 }:
             <Link to="/catalog" className="text-woodwise-text hover:text-primary transition-colors">
               Products
             </Link>
-            {isLoggedIn && (
-              <Link to="/quotes" className="text-woodwise-text hover:text-primary transition-colors">
-                My Quotes
-              </Link>
+            {user && (
+              <>
+                <Link to="/quotes" className="text-woodwise-text hover:text-primary transition-colors">
+                  My Quotes
+                </Link>
+                {isAdmin && (
+                  <Link to="/admin/quotes" className="text-woodwise-text hover:text-primary transition-colors">
+                    Client Quotes
+                  </Link>
+                )}
+              </>
             )}
           </nav>
         </div>
@@ -48,7 +59,7 @@ export function MainHeader({ isLoggedIn = false, onLogout, quoteItemCount = 0 }:
           </Link>
           
           <div className="hidden md:block">
-            {isLoggedIn ? (
+            {user ? (
               <div className="flex items-center space-x-4">
                 <Link to="/account">
                   <Button variant="ghost" size="icon" aria-label="Account">
@@ -58,7 +69,7 @@ export function MainHeader({ isLoggedIn = false, onLogout, quoteItemCount = 0 }:
                 <Button 
                   variant="ghost" 
                   size="icon" 
-                  onClick={onLogout} 
+                  onClick={handleLogout} 
                   aria-label="Logout"
                 >
                   <LogOut className="h-5 w-5" />
@@ -86,7 +97,7 @@ export function MainHeader({ isLoggedIn = false, onLogout, quoteItemCount = 0 }:
                 >
                   Products
                 </Link>
-                {isLoggedIn && (
+                {user && (
                   <>
                     <Link 
                       to="/quotes" 
@@ -115,7 +126,7 @@ export function MainHeader({ isLoggedIn = false, onLogout, quoteItemCount = 0 }:
                     </Button>
                   </>
                 )}
-                {!isLoggedIn && (
+                {!user && (
                   <Link 
                     to="/login" 
                     className="text-xl py-2 hover:text-primary transition-colors"
