@@ -6,3 +6,7 @@ verify_jwt = true
 
 [functions.search-products]
 verify_jwt = false
+
+[functions.setup-admins]
+verify_jwt = true
+

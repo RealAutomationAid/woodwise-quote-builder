@@ -1,4 +1,3 @@
-
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -19,14 +18,14 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 
 const loginSchema = z.object({
-  email: z.string().email({ message: "Please enter a valid email" }),
+  email: z.string().min(1, { message: "Email is required" }),
   password: z.string().min(6, { message: "Password must be at least 6 characters" }),
 });
 
 const registerSchema = z.object({
   firstName: z.string().min(2, { message: "First name must be at least 2 characters" }),
   lastName: z.string().min(2, { message: "Last name must be at least 2 characters" }),
-  email: z.string().email({ message: "Please enter a valid email" }),
+  email: z.string().min(1, { message: "Email is required" }),
   password: z.string().min(6, { message: "Password must be at least 6 characters" }),
   confirmPassword: z.string().min(6, { message: "Confirm password must be at least 6 characters" }),
 }).refine((data) => data.password === data.confirmPassword, {
@@ -68,7 +67,6 @@ export function AuthForm() {
 
   async function onRegisterSubmit(values: z.infer<typeof registerSchema>) {
     try {
-      // First register the user
       const { data, error } = await supabase.auth.signUp({
         email: values.email,
         password: values.password,
@@ -82,9 +80,7 @@ export function AuthForm() {
 
       if (error) throw error;
       
-      // Check if user exists and was created
-      if (data.user) {
-        // Update the profile with first and last name
+      if (data?.user) {
         const { error: profileError } = await supabase
           .from('profiles')
           .upsert({
@@ -110,7 +106,6 @@ export function AuthForm() {
       return;
     }
     
-    // Call our new edge function
     resetPassword(email);
   }
   
