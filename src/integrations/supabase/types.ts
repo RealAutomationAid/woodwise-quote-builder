@@ -9,26 +9,247 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      profiles: {
+      categories: {
         Row: {
           created_at: string
           id: string
-          role: Database["public"]["Enums"]["user_role"] | null
+          name: string
+          parent_id: string | null
           updated_at: string
         }
         Insert: {
           created_at?: string
-          id: string
-          role?: Database["public"]["Enums"]["user_role"] | null
+          id?: string
+          name: string
+          parent_id?: string | null
           updated_at?: string
         }
         Update: {
           created_at?: string
           id?: string
+          name?: string
+          parent_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "categories_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_pricing: {
+        Row: {
+          created_at: string
+          id: string
+          is_planed: boolean
+          length: number
+          material: string
+          price: number
+          product_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_planed?: boolean
+          length: number
+          material: string
+          price: number
+          product_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_planed?: boolean
+          length?: number
+          material?: string
+          price?: number
+          product_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_pricing_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      products: {
+        Row: {
+          category_id: string | null
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          is_planed: boolean
+          lengths: number[]
+          material: string
+          name: string
+          price_per_unit: number
+          updated_at: string
+        }
+        Insert: {
+          category_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_planed?: boolean
+          lengths: number[]
+          material: string
+          name: string
+          price_per_unit: number
+          updated_at?: string
+        }
+        Update: {
+          category_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_planed?: boolean
+          lengths?: number[]
+          material?: string
+          name?: string
+          price_per_unit?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "products_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          company: string | null
+          created_at: string
+          first_name: string | null
+          id: string
+          last_name: string | null
+          role: Database["public"]["Enums"]["user_role"] | null
+          updated_at: string
+        }
+        Insert: {
+          company?: string | null
+          created_at?: string
+          first_name?: string | null
+          id: string
+          last_name?: string | null
+          role?: Database["public"]["Enums"]["user_role"] | null
+          updated_at?: string
+        }
+        Update: {
+          company?: string | null
+          created_at?: string
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
           role?: Database["public"]["Enums"]["user_role"] | null
           updated_at?: string
         }
         Relationships: []
+      }
+      quote_history: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          notes: string | null
+          quote_id: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          quote_id: string
+          status: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          quote_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quote_history_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quote_items: {
+        Row: {
+          created_at: string
+          id: string
+          is_planed: boolean
+          length: number
+          material: string
+          product_id: string
+          quantity: number
+          quote_id: string
+          total_price: number
+          unit_price: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_planed?: boolean
+          length: number
+          material: string
+          product_id: string
+          quantity?: number
+          quote_id: string
+          total_price: number
+          unit_price: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_planed?: boolean
+          length?: number
+          material?: string
+          product_id?: string
+          quantity?: number
+          quote_id?: string
+          total_price?: number
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quote_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quote_items_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       quotes: {
         Row: {

@@ -22,7 +22,8 @@ const loginSchema = z.object({
 });
 
 const registerSchema = z.object({
-  name: z.string().min(2, { message: "Name must be at least 2 characters" }),
+  firstName: z.string().min(2, { message: "First name must be at least 2 characters" }),
+  lastName: z.string().min(2, { message: "Last name must be at least 2 characters" }),
   email: z.string().email({ message: "Please enter a valid email" }),
   password: z.string().min(6, { message: "Password must be at least 6 characters" }),
   confirmPassword: z.string().min(6, { message: "Confirm password must be at least 6 characters" }),
@@ -46,7 +47,8 @@ export function AuthForm() {
   const registerForm = useForm<z.infer<typeof registerSchema>>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
-      name: "",
+      firstName: "",
+      lastName: "",
       email: "",
       password: "",
       confirmPassword: "",
@@ -64,7 +66,22 @@ export function AuthForm() {
 
   async function onRegisterSubmit(values: z.infer<typeof registerSchema>) {
     try {
-      await signUp(values.email, values.password);
+      const { error } = await signUp(values.email, values.password);
+      if (error) throw error;
+
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({
+            first_name: values.firstName,
+            last_name: values.lastName
+          })
+          .eq('id', user.id);
+
+        if (profileError) throw profileError;
+      }
+
       toast.success("Registration successful! You can now log in.");
       setIsLogin(true);
     } catch (error) {
@@ -78,7 +95,6 @@ export function AuthForm() {
       toast.error("Please enter your email address first");
       return;
     }
-    // This would connect to a real password reset system
     console.log("Password reset request for:", email);
     toast.success("Password reset link sent to your email");
   }
@@ -129,19 +145,34 @@ export function AuthForm() {
       ) : (
         <Form {...registerForm}>
           <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-6">
-            <FormField
-              control={registerForm.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="John Doe" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={registerForm.control}
+                name="firstName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>First Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="John" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={registerForm.control}
+                name="lastName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Last Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Doe" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
             <FormField
               control={registerForm.control}
               name="email"
