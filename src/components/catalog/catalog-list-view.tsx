@@ -1,59 +1,98 @@
-import { Button } from "@/components/ui/button";
-import { ProductType } from "@/components/catalog/product-card";
-import { ProductConfigType } from "@/components/catalog/product-detail-view";
+import { useEffect, useState } from "react";
+import { ProductCard, ProductType } from "./product-card";
+import { ProductFilters } from "./product-filters";
+import { EmptyState } from "./empty-state";
+import { useProducts, DEFAULT_FILTER, ProductFilter } from "@/hooks/use-products";
+import { supabase } from "@/integrations/supabase/client";
 
 type CatalogListViewProps = {
-  products: ProductType[];
-  onAddToQuote: (product: ProductType, config?: ProductConfigType) => void;
+  onAddToQuote?: (product: ProductType) => void;
 };
 
-export function CatalogListView({ products, onAddToQuote }: CatalogListViewProps) {
+export function CatalogListView({ onAddToQuote }: CatalogListViewProps) {
+  const [filters, setFilters] = useState<ProductFilter>(DEFAULT_FILTER);
+  const { products, isLoading, totalCount, error, fetchProducts } = useProducts();
+  const [categories, setCategories] = useState<{ id: string; name: string; parent_id?: string | null }[]>([]);
+  const [materials, setMaterials] = useState<string[]>([]);
+
+  // Fetch categories
+  useEffect(() => {
+    async function fetchCategories() {
+      const { data, error } = await supabase
+        .from('categories')
+        .select('id, name, parent_id');
+      
+      if (!error && data) {
+        setCategories(data);
+      } else {
+        console.error('Error fetching categories:', error);
+      }
+    }
+
+    fetchCategories();
+  }, []);
+
+  // Fetch unique materials
+  useEffect(() => {
+    async function fetchMaterials() {
+      const { data, error } = await supabase
+        .from('products')
+        .select('material');
+      
+      if (!error && data) {
+        // Extract unique materials
+        const uniqueMaterials = [...new Set(data.map(p => p.material))];
+        setMaterials(uniqueMaterials);
+      } else {
+        console.error('Error fetching materials:', error);
+      }
+    }
+
+    fetchMaterials();
+  }, []);
+
+  // Fetch products when filters change
+  useEffect(() => {
+    fetchProducts(filters);
+  }, [filters, fetchProducts]);
+
+  const handleFilterChange = (newFilters: ProductFilter) => {
+    setFilters(newFilters);
+  };
+
   return (
-    <div className="space-y-4">
-      {products.map((product) => (
-        <div key={product.id} className="border border-border rounded-md p-4 bg-white">
-          <div className="flex flex-col md:flex-row gap-6">
-            <div className="w-full md:w-1/3">
-              <div className="aspect-video bg-muted rounded-md overflow-hidden">
-                <img
-                  src={product.imageUrl || "/placeholder.svg"}
-                  alt={product.name}
-                  className="object-cover w-full h-full"
-                />
-              </div>
-            </div>
-            
-            <div className="flex-1">
-              <h3 className="text-xl font-medium">{product.name}</h3>
-              <p className="text-muted-foreground">{product.category}</p>
-              
-              <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <p><span className="font-medium">Material:</span> {product.material}</p>
-                  <p><span className="font-medium">Planed:</span> {product.isPlaned ? 'Yes' : 'No'}</p>
-                  <p>
-                    <span className="font-medium">Available Lengths:</span>{' '}
-                    {product.lengths.join('mm, ')}mm
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xl font-bold">£{product.pricePerUnit.toFixed(2)}</p>
-                  <p className="text-muted-foreground text-sm">Per unit</p>
-                  
-                  <Button 
-                    className="mt-4" 
-                    onClick={() => onAddToQuote(product)}
-                  >
-                    Add to Quote
-                  </Button>
-                </div>
-              </div>
-              
-              <p className="mt-4 text-muted-foreground">{product.description}</p>
-            </div>
+    <div>
+      <ProductFilters 
+        filters={filters}
+        onFilterChange={handleFilterChange}
+        categories={categories}
+        materials={materials}
+        totalCount={totalCount}
+      />
+      
+      <div className="container mx-auto px-4 py-8">
+        {isLoading ? (
+          <div className="flex justify-center my-16">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
           </div>
-        </div>
-      ))}
+        ) : error ? (
+          <div className="text-center text-red-500 my-16">
+            <p>Error loading products: {error}</p>
+          </div>
+        ) : products.length === 0 ? (
+          <EmptyState />
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {products.map((product) => (
+              <ProductCard 
+                key={product.id} 
+                product={product}
+                onAddToQuote={onAddToQuote}
+              />
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 } 

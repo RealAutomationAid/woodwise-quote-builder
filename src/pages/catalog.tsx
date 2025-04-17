@@ -25,7 +25,7 @@ const CatalogPage = () => {
   const [quoteItems, setQuoteItems] = useState<string[]>([]);
   
   // Use the custom hook for filtering
-  const { filters, setFilters, categories, materials, filteredProducts } = useProductFilters(products);
+  const { filters, setFilters, categories, materials, filteredProducts, totalCount } = useProductFilters(products);
 
   useEffect(() => {
     const loadProducts = async () => {
@@ -69,6 +69,7 @@ const CatalogPage = () => {
         onFilterChange={setFilters}
         categories={categories}
         materials={materials}
+        totalCount={totalCount}
       />
       
       <main className="flex-1 container mx-auto px-4 py-6">
@@ -85,18 +86,15 @@ const CatalogPage = () => {
           <>
             {filteredProducts.length === 0 ? (
               <EmptyState />
+            ) : viewMode === 'grid' ? (
+              <CatalogGridView 
+                products={filteredProducts} 
+                onAddToQuote={handleAddToQuote}
+              />
             ) : (
-              viewMode === 'grid' ? (
-                <CatalogGridView 
-                  products={filteredProducts} 
-                  onAddToQuote={handleAddToQuote}
-                />
-              ) : (
-                <CatalogListView 
-                  products={filteredProducts} 
-                  onAddToQuote={handleAddToQuote}
-                />
-              )
+              <CatalogListView 
+                onAddToQuote={handleAddToQuote}
+              />
             )}
           </>
         )}

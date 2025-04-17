@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -8,6 +7,7 @@ interface AuthContextType {
   session: Session | null;
   user: User | null;
   isAdmin: boolean;
+  profile: any | null;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string) => Promise<{ data: any, error: any }>;
   signOut: () => Promise<void>;
@@ -19,6 +19,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [profile, setProfile] = useState<any | null>(null);
 
   useEffect(() => {
     // Setup auth state listener FIRST
@@ -29,10 +30,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (session?.user) {
         // Defer Supabase calls to prevent deadlocks
         setTimeout(() => {
-          checkAdminStatus(session.user.id);
+          fetchUserProfile(session.user.id);
         }, 0);
       } else {
         setIsAdmin(false);
+        setProfile(null);
       }
     });
 
@@ -42,7 +44,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        checkAdminStatus(session.user.id);
+        fetchUserProfile(session.user.id);
       }
     });
 
@@ -51,21 +53,63 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  const checkAdminStatus = async (userId: string) => {
+  const fetchUserProfile = async (userId: string) => {
     try {
+      // Use a simpler query that doesn't try to set role
       const { data, error } = await supabase
         .from('profiles')
-        .select('role')
+        .select('id, first_name, last_name, company, role')
         .eq('id', userId)
         .single();
 
-      if (data && !error) {
+      if (error) {
+        console.error("Error fetching user profile:", error);
+        
+        // If the error is that the profile doesn't exist, create one
+        if (error.code === 'PGRST116') {
+          // Create a new profile with known admin emails
+          const knownAdminEmails = ['dotasava@abv.bg', 'admin@example.com'];
+          const currentUserEmail = session?.user?.email || '';
+          const isKnownAdmin = knownAdminEmails.includes(currentUserEmail);
+          
+          const { data: newProfile, error: insertError } = await supabase
+            .from('profiles')
+            .insert([{ 
+              id: userId,
+              role: isKnownAdmin ? 'admin' : 'user'
+            }])
+            .select()
+            .single();
+            
+          if (insertError) {
+            console.error("Error creating user profile:", insertError);
+            setIsAdmin(false);
+            setProfile(null);
+            return;
+          }
+          
+          setProfile(newProfile);
+          setIsAdmin(isKnownAdmin);
+          return;
+        }
+        
+        setIsAdmin(false);
+        setProfile(null);
+        return;
+      }
+
+      if (data) {
+        setProfile(data);
+        // Check if the user has the admin role in their profile
         setIsAdmin(data.role === 'admin');
-      } else if (error) {
-        console.error("Error checking admin status:", error);
+      } else {
+        setIsAdmin(false);
+        setProfile(null);
       }
     } catch (error) {
-      console.error("Failed to check admin status:", error);
+      console.error("Failed to fetch user profile:", error);
+      setIsAdmin(false);
+      setProfile(null);
     }
   };
 
@@ -86,7 +130,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ session, user, isAdmin, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ session, user, isAdmin, profile, signIn, signUp, signOut }}>
       {children}
     </AuthContext.Provider>
   );

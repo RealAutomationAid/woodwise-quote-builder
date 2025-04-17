@@ -9,12 +9,12 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { X } from "lucide-react";
-import { FilterType } from "../product-filters";
+import { ProductFilter } from "@/hooks/use-products";
 
 type DesktopFiltersProps = {
-  filters: FilterType;
-  onFilterChange: (filters: FilterType) => void;
-  categories: string[];
+  filters: ProductFilter;
+  onFilterChange: (filters: ProductFilter) => void;
+  categories: { id: string; name: string; parent_id?: string | null }[];
   materials: string[];
   onReset: () => void;
 };
@@ -41,9 +41,17 @@ export function DesktopFilters({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all-categories">All Categories</SelectItem>
-            {categories.map((category) => (
-              <SelectItem key={category} value={category}>
-                {category}
+            {categories.filter(category => {
+              const valid = typeof category.id === 'string' && category.id.trim() !== '' && typeof category.name === 'string' && category.name.trim() !== '';
+              if (!valid) {
+                if (process.env.NODE_ENV !== 'production') {
+                  console.warn('[DesktopFilters] Skipping category with invalid id or name:', category);
+                }
+              }
+              return valid;
+            }).map((category) => (
+              <SelectItem key={category.id} value={category.id}>
+                {String(category.name)}
               </SelectItem>
             ))}
           </SelectContent>

@@ -1,6 +1,7 @@
 import { ProductType } from "./product-card";
+import { supabase } from "@/integrations/supabase/client";
 
-// Sample data for demonstration
+// Sample data for demonstration - keeping as fallback
 export const SAMPLE_PRODUCTS: ProductType[] = [
   {
     id: "1",
@@ -64,9 +65,39 @@ export const SAMPLE_PRODUCTS: ProductType[] = [
   }
 ];
 
-// Simulate fetching items from a server
-export const fetchProducts = () => {
-  return new Promise<ProductType[]>((resolve) => {
-    setTimeout(() => resolve(SAMPLE_PRODUCTS), 300);
-  });
+// Fetch products from Supabase
+export const fetchProducts = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('products')
+      .select('*, categories(name)');
+    
+    if (error) {
+      console.error('Error fetching products:', error);
+      throw error;
+    }
+    
+    // Transform data to expected format
+    return data.map(product => ({
+      id: product.id,
+      name: product.name,
+      category: product.categories?.name || 'Uncategorized',
+      categoryId: product.category_id,
+      category_id: product.category_id,
+      material: product.material,
+      lengths: product.lengths || [2000, 3000, 4000],
+      isPlaned: product.is_planed,
+      pricePerUnit: product.price_per_unit,
+      price_per_unit: product.price_per_unit,
+      description: product.description,
+      image: product.image_url,
+      imageUrl: product.image_url,
+      stock_quantity: product.stock_quantity,
+      created_at: product.created_at,
+      updated_at: product.updated_at
+    }));
+  } catch (error) {
+    console.error('Failed to fetch products from Supabase:', error);
+    return SAMPLE_PRODUCTS; // Fallback to sample data
+  }
 }; 

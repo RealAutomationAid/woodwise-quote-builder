@@ -1,90 +1,44 @@
-
 import { useState, useEffect } from "react";
 import { MainHeader } from "@/components/layout/main-header";
 import { MainFooter } from "@/components/layout/main-footer";
-import { QuoteItem, QuoteItemType } from "@/components/quote/quote-item";
+import { QuoteItem } from "@/components/quote/quote-item";
 import { QuoteSummary } from "@/components/quote/quote-summary";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { ArrowLeft, ShoppingBag } from "lucide-react";
-import { ProductConfigType } from "@/components/catalog/product-detail-view";
-import { v4 as uuidv4 } from 'uuid';
-
-// Sample data for demonstration (would come from your API/state management)
-const SAMPLE_QUOTE_ITEMS: QuoteItemType[] = [
-  {
-    id: "quote-item-1",
-    product: {
-      id: "1",
-      name: "Pine Timber Beam",
-      category: "Structural Timber",
-      material: "Pine",
-      lengths: [2000, 3000, 4000, 5000],
-      isPlaned: true,
-      pricePerUnit: 45.99,
-      description: "High-quality pine timber beams, perfect for construction projects requiring sturdy, reliable support."
-    },
-    config: {
-      length: 3000,
-      material: "Pine",
-      isPlaned: true,
-      quantity: 2
-    }
-  },
-  {
-    id: "quote-item-2",
-    product: {
-      id: "3",
-      name: "Spruce Wall Panel",
-      category: "Wall Paneling",
-      material: "Spruce",
-      lengths: [1800, 2400, 3000],
-      isPlaned: false,
-      pricePerUnit: 35.25,
-      description: "Natural spruce wall panels for interior and exterior wall applications."
-    },
-    config: {
-      length: 2400,
-      material: "Spruce",
-      isPlaned: false,
-      quantity: 5
-    }
-  }
-];
+import { useQuote, ProductConfigType } from "@/contexts/QuoteContext";
 
 const QuotePage = () => {
   const navigate = useNavigate();
-  const [quoteItems, setQuoteItems] = useState<QuoteItemType[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { quoteItems, removeItem, updateItem, submitQuote, loading } = useQuote();
   
-  useEffect(() => {
-    // Simulate loading items from API or state
-    setLoading(true);
-    setTimeout(() => {
-      setQuoteItems(SAMPLE_QUOTE_ITEMS);
-      setLoading(false);
-    }, 300);
-  }, []);
-
   const handleRemoveItem = (id: string) => {
-    setQuoteItems(quoteItems.filter(item => item.id !== id));
+    removeItem(id);
     toast.success("Item removed from quote");
   };
 
   const handleUpdateItem = (id: string, config: ProductConfigType) => {
-    setQuoteItems(quoteItems.map(item => 
-      item.id === id ? { ...item, config } : item
-    ));
+    updateItem(id, config);
     toast.success("Item updated");
   };
 
-  const handleSubmitQuote = () => {
-    // This would connect to your backend API
-    toast.success("Quote submitted successfully! We'll contact you soon.");
-    setTimeout(() => {
-      navigate("/quotes");
-    }, 1500);
+  const handleSubmitQuote = async () => {
+    const success = await submitQuote(false);
+    if (success) {
+      setTimeout(() => {
+        navigate("/quotes");
+      }, 1500);
+    }
+  };
+  
+  const handleSaveAsDraft = async () => {
+    const success = await submitQuote(true);
+    if (success) {
+      setTimeout(() => {
+        navigate("/quotes");
+      }, 1500);
+    }
   };
 
   const handleGeneratePdf = () => {
@@ -147,6 +101,7 @@ const QuotePage = () => {
               <QuoteSummary 
                 items={quoteItems} 
                 onSubmitQuote={handleSubmitQuote}
+                onSaveAsDraft={handleSaveAsDraft}
                 onGeneratePdf={handleGeneratePdf}
               />
             </div>

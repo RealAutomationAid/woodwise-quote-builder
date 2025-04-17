@@ -1,4 +1,3 @@
-
 import { Logo } from "@/components/ui/logo";
 import { Link } from "react-router-dom";
 
@@ -40,15 +39,15 @@ export function MainFooter() {
           <div>
             <h3 className="font-medium text-lg mb-4">Contact</h3>
             <ul className="space-y-2 text-muted-foreground">
-              <li>Email: info@woodwise.com</li>
-              <li>Phone: +1 (555) 123-4567</li>
-              <li>Address: 123 Timber Lane, Woodland, CA 12345</li>
+              <li>Email: info@valex.com</li>
+              <li>Phone: +7 (999) 123-4567</li>
+              <li>Address: 123 Timber Lane, Moscow, Russia</li>
             </ul>
           </div>
         </div>
         
         <div className="border-t border-border mt-8 pt-6 text-center text-sm text-muted-foreground">
-          <p>© {currentYear} WoodWise. All rights reserved.</p>
+          <p>© {currentYear} Валекс. All rights reserved.</p>
         </div>
       </div>
     </footer>

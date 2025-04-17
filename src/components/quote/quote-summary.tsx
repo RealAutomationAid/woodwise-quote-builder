@@ -1,22 +1,24 @@
-
 import { Button } from "@/components/ui/button";
 import { QuoteItemType } from "@/components/quote/quote-item";
-import { FileDown, Send } from "lucide-react";
+import { FileDown, Save, Send } from "lucide-react";
 
 type QuoteSummaryProps = {
   items: QuoteItemType[];
   onSubmitQuote?: () => void;
+  onSaveAsDraft?: () => void;
   onGeneratePdf?: () => void;
 };
 
-export function QuoteSummary({ items, onSubmitQuote, onGeneratePdf }: QuoteSummaryProps) {
+export function QuoteSummary({ items, onSubmitQuote, onSaveAsDraft, onGeneratePdf }: QuoteSummaryProps) {
+  // Defensive: Filter out items with missing product
+  const validItems = items.filter(item => item.product);
   // Calculate total price
-  const totalPrice = items.reduce((total, item) => {
+  const totalPrice = validItems.reduce((total, item) => {
     const price = (item.product.pricePerUnit || 0) * item.config.quantity;
     return total + price;
   }, 0);
   
-  const isEmpty = items.length === 0;
+  const isEmpty = validItems.length === 0;
 
   return (
     <div className="border border-border rounded-md p-4 bg-white">
@@ -25,12 +27,12 @@ export function QuoteSummary({ items, onSubmitQuote, onGeneratePdf }: QuoteSumma
       <div className="space-y-2 mb-4">
         <div className="flex justify-between py-1">
           <span>Items:</span>
-          <span>{items.length}</span>
+          <span>{validItems.length}</span>
         </div>
         <div className="flex justify-between py-1">
           <span>Total Quantity:</span>
           <span>
-            {items.reduce((total, item) => total + item.config.quantity, 0)} units
+            {validItems.reduce((total, item) => total + item.config.quantity, 0)} units
           </span>
         </div>
         <div className="border-t border-border my-2"></div>
@@ -51,6 +53,16 @@ export function QuoteSummary({ items, onSubmitQuote, onGeneratePdf }: QuoteSumma
         </Button>
         
         <Button 
+          variant="secondary" 
+          className="w-full" 
+          disabled={isEmpty}
+          onClick={onSaveAsDraft}
+        >
+          <Save className="h-4 w-4 mr-2" />
+          Save as Draft
+        </Button>
+        
+        <Button 
           variant="outline" 
           className="w-full" 
           disabled={isEmpty}
@@ -63,7 +75,7 @@ export function QuoteSummary({ items, onSubmitQuote, onGeneratePdf }: QuoteSumma
       
       {isEmpty && (
         <p className="text-sm text-muted-foreground text-center mt-4">
-          Your quote is empty. Add some products to get started.
+          Your quote is empty or contains invalid items. Add some products to get started.
         </p>
       )}
     </div>

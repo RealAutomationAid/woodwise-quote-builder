@@ -88,4 +88,3 @@
 * **IDE:** VS Code / Cursor
 * **Version Control:** Git, GitHub (https://github.com/RealAutomationAid/woodwise-quote-builder.git)
 * **Backend Management:** Supabase Studio (Dashboard)
-* **Testing Framework:** Vitest

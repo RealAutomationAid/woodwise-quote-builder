@@ -18,14 +18,14 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 
 const loginSchema = z.object({
-  email: z.string().min(1, { message: "Email is required" }),
+  email: z.string().nonempty("Email is required"),
   password: z.string().min(6, { message: "Password must be at least 6 characters" }),
 });
 
 const registerSchema = z.object({
   firstName: z.string().min(2, { message: "First name must be at least 2 characters" }),
   lastName: z.string().min(2, { message: "Last name must be at least 2 characters" }),
-  email: z.string().min(1, { message: "Email is required" }),
+  email: z.string().nonempty("Email is required"),
   password: z.string().min(6, { message: "Password must be at least 6 characters" }),
   confirmPassword: z.string().min(6, { message: "Confirm password must be at least 6 characters" }),
 }).refine((data) => data.password === data.confirmPassword, {
@@ -150,7 +150,12 @@ export function AuthForm() {
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input placeholder="email@example.com" {...field} />
+                    <Input 
+                      placeholder="email@example.com" 
+                      type="email"
+                      autoComplete="email"
+                      {...field} 
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -214,9 +219,14 @@ export function AuthForm() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input placeholder="email@example.com" type="email" {...field} />
-                  </FormControl>
+                  {/* DIAGNOSTIC: Plain input for registration email field, no FormControl */}
+                  <input 
+                    placeholder="email@example.com" 
+                    type="email" 
+                    autoComplete="email"
+                    {...field}
+                    style={{ border: '1px solid #ccc', padding: 4, width: '100%' }}
+                  />
                   <FormMessage />
                 </FormItem>
               )}
