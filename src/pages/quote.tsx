@@ -15,12 +15,12 @@ const QuotePage = () => {
   
   const handleRemoveItem = (id: string) => {
     removeItem(id);
-    toast.success("Item removed from quote");
+    toast.success("Артикулът беше премахнат от офертата");
   };
 
   const handleUpdateItem = (id: string, config: ProductConfigType) => {
     updateItem(id, config);
-    toast.success("Item updated");
+    toast.success("Артикулът беше обновен");
   };
 
   const handleSubmitQuote = async () => {
@@ -43,7 +43,7 @@ const QuotePage = () => {
 
   const handleGeneratePdf = () => {
     // This would trigger PDF generation via your backend
-    toast.success("PDF generated and ready for download!");
+    toast.success("PDF е генериран и готов за изтегляне!");
   };
 
   return (
@@ -59,12 +59,12 @@ const QuotePage = () => {
           >
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <h1 className="text-2xl font-bold">Your Quote</h1>
+          <h1 className="text-2xl font-bold">Вашата оферта</h1>
         </div>
         
         {loading ? (
           <div className="py-12 text-center">
-            <div className="animate-pulse">Loading your quote...</div>
+            <div className="animate-pulse">Зареждане на вашата оферта...</div>
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -72,15 +72,15 @@ const QuotePage = () => {
               {quoteItems.length === 0 ? (
                 <div className="py-12 text-center border border-border rounded-md bg-white">
                   <ShoppingBag className="h-12 w-12 mx-auto text-muted-foreground" />
-                  <h3 className="text-lg font-medium mt-4">Your quote is empty</h3>
+                  <h3 className="text-lg font-medium mt-4">Вашата оферта е празна</h3>
                   <p className="text-muted-foreground mt-1">
-                    Browse our catalog and add items to your quote
+                    Разгледайте нашия каталог и добавете артикули към офертата
                   </p>
                   <Button 
                     className="mt-6"
                     onClick={() => navigate("/catalog")}
                   >
-                    Browse Products
+                    Разгледайте продукти
                   </Button>
                 </div>
               ) : (

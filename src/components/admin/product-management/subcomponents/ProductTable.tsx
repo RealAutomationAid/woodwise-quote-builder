@@ -35,14 +35,14 @@ const ProductTable: React.FC<ProductTableProps> = ({ products, loading, getCateg
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-[100px]">Image</TableHead>
-            <TableHead>Name</TableHead>
-            <TableHead>Material</TableHead>
-            <TableHead>Category</TableHead>
-            <TableHead>Lengths</TableHead>
-            <TableHead>Price</TableHead>
-            <TableHead className="w-[100px]">Stock</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
+            <TableHead className="w-[100px]">Изображение</TableHead>
+            <TableHead>Име</TableHead>
+            <TableHead>Материал</TableHead>
+            <TableHead>Категория</TableHead>
+            <TableHead>Дължини</TableHead>
+            <TableHead>Цена</TableHead>
+            <TableHead className="w-[100px]">Наличност</TableHead>
+            <TableHead className="text-right">Действия</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -51,7 +51,7 @@ const ProductTable: React.FC<ProductTableProps> = ({ products, loading, getCateg
               <TableCell colSpan={8} className="text-center py-10">
                 <div className="flex flex-col items-center justify-center space-y-3">
                   <Package className="h-8 w-8 animate-spin text-muted-foreground" />
-                  <p className="text-sm text-muted-foreground">Loading products...</p>
+                  <p className="text-sm text-muted-foreground">Зареждане на продукти...</p>
                 </div>
               </TableCell>
             </TableRow>
@@ -60,7 +60,7 @@ const ProductTable: React.FC<ProductTableProps> = ({ products, loading, getCateg
               <TableCell colSpan={8} className="text-center py-10">
                 <div className="flex flex-col items-center justify-center space-y-3">
                   <Package className="h-8 w-8 text-muted-foreground" />
-                  <p className="text-sm text-muted-foreground">No products found</p>
+                  <p className="text-sm text-muted-foreground">Няма намерени продукти</p>
                 </div>
               </TableCell>
             </TableRow>
@@ -93,7 +93,7 @@ const ProductTable: React.FC<ProductTableProps> = ({ products, loading, getCateg
                       </HoverCardTrigger>
                       <HoverCardContent className="w-80">
                         <div className="space-y-1">
-                          <h4 className="text-sm font-semibold">Description</h4>
+                          <h4 className="text-sm font-semibold">Описание</h4>
                           <p className="text-sm">{product.description}</p>
                         </div>
                       </HoverCardContent>
@@ -105,7 +105,7 @@ const ProductTable: React.FC<ProductTableProps> = ({ products, loading, getCateg
                   {product.category_id ? (
                     <Badge variant="outline">{getCategoryName(product.category_id)}</Badge>
                   ) : (
-                    <span className="text-muted-foreground text-sm">None</span>
+                    <span className="text-muted-foreground text-sm">Няма</span>
                   )}
                 </TableCell>
                 <TableCell>
@@ -120,7 +120,7 @@ const ProductTable: React.FC<ProductTableProps> = ({ products, loading, getCateg
                 <TableCell>
                   ${product.price_per_unit.toFixed(2)}
                   <div className="text-xs text-muted-foreground">
-                    {product.is_planed ? 'Planed' : 'Unplaned'}
+                    {product.is_planed ? 'Рендосан' : 'Нерендиран'}
                   </div>
                 </TableCell>
                 <TableCell>
@@ -133,16 +133,16 @@ const ProductTable: React.FC<ProductTableProps> = ({ products, loading, getCateg
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" size="icon">
                         <Edit className="h-4 w-4" />
-                        <span className="sr-only">Edit</span>
+                        <span className="sr-only">Редактирай</span>
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem onClick={() => onEdit(product)}>
-                        <Edit className="mr-2 h-4 w-4" /> Edit
+                        <Edit className="mr-2 h-4 w-4" /> Редактирай
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={() => onDelete(product)} className="text-red-600">
-                        <Trash2 className="mr-2 h-4 w-4" /> Delete
+                        <Trash2 className="mr-2 h-4 w-4" /> Изтрий
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>

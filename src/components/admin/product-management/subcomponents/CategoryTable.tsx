@@ -36,24 +36,24 @@ const CategoryTable: React.FC<CategoryTableProps> = ({
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Parent</TableHead>
-            <TableHead>Children</TableHead>
-            <TableHead>Updated</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
+            <TableHead>Име</TableHead>
+            <TableHead>Родител</TableHead>
+            <TableHead>Подкатегории</TableHead>
+            <TableHead>Обновена</TableHead>
+            <TableHead className="text-right">Действия</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {loading ? (
             <TableRow>
               <TableCell colSpan={5} className="text-center py-10">
-                Loading categories...
+                Зареждане на категории...
               </TableCell>
             </TableRow>
           ) : categories.length === 0 ? (
             <TableRow>
               <TableCell colSpan={5} className="text-center py-10">
-                No categories found
+                Няма намерени категории
               </TableCell>
             </TableRow>
           ) : (
@@ -68,7 +68,7 @@ const CategoryTable: React.FC<CategoryTableProps> = ({
                         {getParentCategoryName(category.parent_id)}
                       </Badge>
                     ) : (
-                      <span className="text-muted-foreground text-sm">None</span>
+                      <span className="text-muted-foreground text-sm">Няма</span>
                     )}
                   </TableCell>
                   <TableCell>
@@ -81,7 +81,7 @@ const CategoryTable: React.FC<CategoryTableProps> = ({
                         ))}
                       </div>
                     ) : (
-                      <span className="text-muted-foreground text-sm">None</span>
+                      <span className="text-muted-foreground text-sm">Няма</span>
                     )}
                   </TableCell>
                   <TableCell>
@@ -97,11 +97,11 @@ const CategoryTable: React.FC<CategoryTableProps> = ({
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem onClick={() => onEdit(category)}>
-                          <Edit className="mr-2 h-4 w-4" /> Edit
+                          <Edit className="mr-2 h-4 w-4" /> Редактирай
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={() => onDelete(category)} className="text-red-600">
-                          <Trash2 className="mr-2 h-4 w-4" /> Delete
+                          <Trash2 className="mr-2 h-4 w-4" /> Изтрий
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>

@@ -113,7 +113,7 @@ export default function CategoriesTab() {
       if (error) throw error;
       setCategories(data || []);
     } catch (error) {
-      toast.error('Failed to load categories');
+      toast.error('Неуспешно зареждане на категориите');
       console.error('Error:', error);
     } finally {
       setLoading(false);
@@ -144,7 +144,7 @@ export default function CategoriesTab() {
         .single();
 
       if (error) {
-        toast.error('Failed to add category: ' + error.message);
+        toast.error('Неуспешно добавяне на категория: ' + error.message);
         return;
       }
 
@@ -154,9 +154,9 @@ export default function CategoriesTab() {
       // Reset the form
       setNewCategory({ name: '', parent_id: null });
       setIsAddDialogOpen(false);
-      toast.success('Category added successfully!');
+      toast.success('Категорията е добавена успешно!');
     } catch (error: any) {
-      toast.error(`Error adding category: ${error.message}`);
+      toast.error(`Грешка при добавяне на категория: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -177,7 +177,7 @@ export default function CategoriesTab() {
         .single();
 
       if (error) {
-        toast.error('Failed to update category: ' + error.message);
+        toast.error('Неуспешно обновяване на категория: ' + error.message);
         return;
       }
 
@@ -186,9 +186,9 @@ export default function CategoriesTab() {
       
       // Close the dialog
       setIsEditDialogOpen(false);
-      toast.success('Category updated successfully!');
+      toast.success('Категорията е обновена успешно!');
     } catch (error: any) {
-      toast.error(`Error updating category: ${error.message}`);
+      toast.error(`Грешка при обновяване на категория: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -201,7 +201,7 @@ export default function CategoriesTab() {
       // Check if category has children
       const hasChildren = categories.some(cat => cat.parent_id === currentCategory.id);
       if (hasChildren) {
-        toast.error('Cannot delete a category that has subcategories');
+        toast.error('Не може да изтриете категория, която има подкатегории');
         return;
       }
 
@@ -214,7 +214,7 @@ export default function CategoriesTab() {
       if (countError) throw countError;
       
       if (count && count > 0) {
-        toast.error(`Cannot delete: ${count} products are using this category`);
+        toast.error(`Не може да изтриете: ${count} продукта използват тази категория`);
         return;
       }
 
@@ -225,11 +225,11 @@ export default function CategoriesTab() {
       
       if (error) throw error;
       
-      toast.success('Category deleted successfully');
+      toast.success('Категорията е изтрита успешно');
       setCategories(categories.filter(category => category.id !== currentCategory.id));
       setIsDeleteDialogOpen(false);
     } catch (error) {
-      toast.error('Failed to delete category');
+      toast.error('Неуспешно изтриване на категория');
       console.error('Error:', error);
     }
   };
@@ -260,7 +260,7 @@ export default function CategoriesTab() {
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2 w-full max-w-md">
           <Input
-            placeholder="Search categories..."
+            placeholder="Търсене на категории..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="max-w-sm"
@@ -277,13 +277,13 @@ export default function CategoriesTab() {
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
-                <p>Clear search</p>
+                <p>Изчисти търсенето</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
         </div>
         <Button onClick={() => setIsAddDialogOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" /> Add Category
+          <Plus className="mr-2 h-4 w-4" /> Добави категория
         </Button>
       </div>
 
@@ -291,39 +291,25 @@ export default function CategoriesTab() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Parent Category</TableHead>
-              <TableHead>Subcategories</TableHead>
-              <TableHead>Last Updated</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead>Име на категория</TableHead>
+              <TableHead>Родителска категория</TableHead>
+              <TableHead>Действия</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center py-10">
+                <TableCell colSpan={3} className="text-center py-10">
                   <div className="flex flex-col items-center justify-center space-y-3">
                     <RefreshCw className="h-8 w-8 animate-spin text-muted-foreground" />
-                    <p className="text-sm text-muted-foreground">Loading categories...</p>
+                    <p className="text-sm text-muted-foreground">Зареждане на категории...</p>
                   </div>
                 </TableCell>
               </TableRow>
-            ) : filteredCategories.length === 0 ? (
+            ) : categories.length === 0 && !loading ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center py-10">
-                  <div className="flex flex-col items-center justify-center space-y-3">
-                    <Tag className="h-8 w-8 text-muted-foreground" />
-                    <p className="text-sm text-muted-foreground">No categories found</p>
-                    {searchQuery && (
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => setSearchQuery('')}
-                      >
-                        Clear search
-                      </Button>
-                    )}
-                  </div>
+                <TableCell colSpan={3} className="text-center text-muted-foreground py-8">
+                  Няма намерени категории.
                 </TableCell>
               </TableRow>
             ) : (
@@ -338,7 +324,7 @@ export default function CategoriesTab() {
                           {getParentCategoryName(category.parent_id)}
                         </Badge>
                       ) : (
-                        <span className="text-muted-foreground text-sm">None</span>
+                        <span className="text-muted-foreground text-sm">Няма</span>
                       )}
                     </TableCell>
                     <TableCell>
@@ -351,11 +337,8 @@ export default function CategoriesTab() {
                           ))}
                         </div>
                       ) : (
-                        <span className="text-muted-foreground text-sm">None</span>
+                        <span className="text-muted-foreground text-sm">Няма</span>
                       )}
-                    </TableCell>
-                    <TableCell>
-                      {format(new Date(category.updated_at), 'MMM dd, yyyy')}
                     </TableCell>
                     <TableCell className="text-right">
                       <DropdownMenu>
@@ -367,14 +350,14 @@ export default function CategoriesTab() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem onClick={() => handleEditClick(category)}>
-                            <Edit className="mr-2 h-4 w-4" /> Edit
+                            <Edit className="mr-2 h-4 w-4" /> Редактирай
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem 
                             onClick={() => handleDeleteClick(category)}
                             className="text-red-600"
                           >
-                            <Trash2 className="mr-2 h-4 w-4" /> Delete
+                            <Trash2 className="mr-2 h-4 w-4" /> Изтрий
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -391,32 +374,32 @@ export default function CategoriesTab() {
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Add New Category</DialogTitle>
+            <DialogTitle>Нова категория</DialogTitle>
             <DialogDescription>
-              Create a new category or subcategory for your products.
+              Създайте нова категория или подкатегория за вашите продукти.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="new-category-name">Category Name</Label>
+              <Label htmlFor="new-category-name">Име на категория</Label>
               <Input
                 id="new-category-name"
                 value={newCategory.name}
                 onChange={(e) => setNewCategory({ ...newCategory, name: e.target.value })}
-                placeholder="Enter category name"
+                placeholder="Въведете име на категория"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="new-category-parent">Parent Category (Optional)</Label>
+              <Label htmlFor="new-category-parent">Родителска категория (по избор)</Label>
               <Select
                 value={newCategory.parent_id || ''}
                 onValueChange={(value) => setNewCategory({ ...newCategory, parent_id: value || null })}
               >
                 <SelectTrigger id="new-category-parent">
-                  <SelectValue placeholder="Select a parent category" />
+                  <SelectValue placeholder="Изберете родителска категория" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">None (Top Level)</SelectItem>
+                  <SelectItem value="none">Няма (основна категория)</SelectItem>
                   {categories
                     .filter(category => {
                       const valid = typeof category.id === 'string' && category.id.trim() !== '';
@@ -439,10 +422,10 @@ export default function CategoriesTab() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-              Cancel
+              Отказ
             </Button>
             <Button onClick={addCategory}>
-              Add Category
+              Добави категория
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -452,15 +435,15 @@ export default function CategoriesTab() {
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Edit Category</DialogTitle>
+            <DialogTitle>Редактирай категория</DialogTitle>
             <DialogDescription>
-              Update category name or parent relationship.
+              Актуализирайте името или родителската връзка на категорията.
             </DialogDescription>
           </DialogHeader>
           {currentCategory && (
             <div className="grid gap-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="edit-category-name">Category Name</Label>
+                <Label htmlFor="edit-category-name">Име на категория</Label>
                 <Input
                   id="edit-category-name"
                   value={currentCategory.name}
@@ -468,16 +451,16 @@ export default function CategoriesTab() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="edit-category-parent">Parent Category</Label>
+                <Label htmlFor="edit-category-parent">Родителска категория</Label>
                 <Select
                   value={currentCategory.parent_id || ''}
                   onValueChange={(value) => setCurrentCategory({ ...currentCategory, parent_id: value || null })}
                 >
                   <SelectTrigger id="edit-category-parent">
-                    <SelectValue placeholder="Select a parent category" />
+                    <SelectValue placeholder="Изберете родителска категория" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">None (Top Level)</SelectItem>
+                    <SelectItem value="none">Няма (основна категория)</SelectItem>
                     {categories
                       .filter(category => {
                         const valid = typeof category.id === 'string' && category.id.trim() !== '';
@@ -497,17 +480,17 @@ export default function CategoriesTab() {
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Note: You cannot select this category or its subcategories as parent.
+                  Забележка: Не можете да изберете тази категория или нейните подкатегории като родител.
                 </p>
               </div>
             </div>
           )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-              Cancel
+              Отказ
             </Button>
             <Button onClick={updateCategory}>
-              Update Category
+              Обнови категория
             </Button>
           </DialogFooter>
         </DialogContent>

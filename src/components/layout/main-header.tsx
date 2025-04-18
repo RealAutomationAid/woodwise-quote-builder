@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ShoppingCart, User, LogOut, Menu, ChevronDown, Package, ClipboardList, Tag, Settings, Home, ShoppingBag } from "lucide-react";
+import { ShoppingCart, User, LogOut, Menu, ChevronDown, Package, ClipboardList, Tag, Settings, Home, ShoppingBag, PlusCircle } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -63,46 +63,52 @@ export function MainHeader({ quoteItemCount = 0 }: MainHeaderProps) {
           <nav className="hidden md:flex items-center space-x-1">
             <Link to="/" className="px-3 py-2 text-woodwise-text hover:text-woodwise-accent transition-colors rounded-md flex items-center">
               <Home className="h-4 w-4 mr-1" />
-              Home
+              Начало
             </Link>
             
             <Link to="/catalog" className="px-3 py-2 text-woodwise-text hover:text-woodwise-accent transition-colors rounded-md flex items-center">
               <Package className="h-4 w-4 mr-1" />
-              Products
+              Продукти
             </Link>
             
             {user && (
               <Link to="/quotes" className="px-3 py-2 text-woodwise-text hover:text-woodwise-accent transition-colors rounded-md flex items-center">
                 <ClipboardList className="h-4 w-4 mr-1" />
-                My Quotes
+                Моите оферти
               </Link>
             )}
             
             {isAdmin && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="px-3 py-2 text-woodwise-text hover:text-woodwise-accent transition-colors">
-                    Admin
+                  <Button variant="ghost" className="px-3 py-2 bg-blue-600 text-white hover:bg-blue-700 transition-colors duration-200">
+                    Админ
                     <ChevronDown className="h-4 w-4 ml-1" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-48">
+                <DropdownMenuContent align="start" className="w-48 rounded-md border border-gray-200 bg-white p-2 shadow-lg">
+                  <DropdownMenuItem asChild>
+                    <Link to="/admin/quotes/create" className="w-full flex items-center">
+                      <PlusCircle className="h-4 w-4 mr-2" />
+                      Създай оферта
+                    </Link>
+                  </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link to="/admin/quotes" className="w-full flex items-center">
                       <ClipboardList className="h-4 w-4 mr-2" />
-                      Client Quotes
+                      Клиентски оферти
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link to="/admin/categories" className="w-full flex items-center">
                       <Tag className="h-4 w-4 mr-2" />
-                      Categories
+                      Категории
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link to="/admin/products" className="w-full flex items-center">
                       <Package className="h-4 w-4 mr-2" />
-                      Products
+                      Продукти
                     </Link>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -129,7 +135,7 @@ export function MainHeader({ quoteItemCount = 0 }: MainHeaderProps) {
                 <Link to="/account">
                   <Button variant="ghost" size="sm" className="flex items-center text-woodwise-text hover:text-woodwise-accent px-3">
                     <User className="h-4 w-4 mr-2" />
-                    Account
+                    Профил
                   </Button>
                 </Link>
                 <Button 
@@ -139,13 +145,13 @@ export function MainHeader({ quoteItemCount = 0 }: MainHeaderProps) {
                   className="flex items-center text-woodwise-text hover:text-woodwise-accent px-3"
                 >
                   <LogOut className="h-4 w-4 mr-2" />
-                  Logout
+                  Изход
                 </Button>
               </div>
             ) : (
               <Link to="/login">
                 <Button className="bg-woodwise-accent hover:bg-woodwise-brown text-white">
-                  Log In
+                  Вход
                 </Button>
               </Link>
             )}
@@ -176,7 +182,7 @@ export function MainHeader({ quoteItemCount = 0 }: MainHeaderProps) {
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   <Home className="h-5 w-5 mr-3" />
-                  <span className="text-lg">Home</span>
+                  <span className="text-lg">Начало</span>
                 </Link>
                 
                 <Link 
@@ -185,7 +191,7 @@ export function MainHeader({ quoteItemCount = 0 }: MainHeaderProps) {
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   <Package className="h-5 w-5 mr-3" />
-                  <span className="text-lg">Products</span>
+                  <span className="text-lg">Продукти</span>
                 </Link>
                 
                 <Link 
@@ -194,94 +200,78 @@ export function MainHeader({ quoteItemCount = 0 }: MainHeaderProps) {
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   <ShoppingCart className="h-5 w-5 mr-3" />
-                  <span className="text-lg">Current Quote</span>
-                  {quoteItemCount > 0 && (
-                    <span className="ml-auto bg-woodwise-accent text-white text-xs min-w-5 h-5 px-1 flex items-center justify-center rounded-full">
-                      {quoteItemCount}
-                    </span>
-                  )}
+                  <span className="text-lg">Текуща оферта</span>
                 </Link>
-                
                 {user && (
+                  <Link 
+                    to="/quotes" 
+                    className="px-3 py-2 rounded-md hover:bg-muted flex items-center"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <ClipboardList className="h-5 w-5 mr-3" />
+                    <span className="text-lg">Моите оферти</span>
+                  </Link>
+                )}
+                {isAdmin && (
                   <>
                     <Link 
-                      to="/quotes" 
+                      to="/admin/quotes/create" 
+                      className="px-3 py-2 rounded-md hover:bg-muted flex items-center"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      <PlusCircle className="h-5 w-5 mr-3" />
+                      <span className="text-lg">Създай оферта</span>
+                    </Link>
+                    <Link 
+                      to="/admin/quotes" 
                       className="px-3 py-2 rounded-md hover:bg-muted flex items-center"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
                       <ClipboardList className="h-5 w-5 mr-3" />
-                      <span className="text-lg">My Quotes</span>
+                      <span className="text-lg">Клиентски оферти</span>
                     </Link>
-                    
-                    {isAdmin && (
-                      <div className="mt-4 mb-2">
-                        <p className="px-3 text-sm font-medium text-muted-foreground">Admin</p>
-                        <Link 
-                          to="/admin/quotes" 
-                          className="px-3 py-2 rounded-md hover:bg-muted flex items-center"
-                          onClick={() => setIsMobileMenuOpen(false)}
-                        >
-                          <ClipboardList className="h-5 w-5 mr-3" />
-                          <span className="text-lg">Client Quotes</span>
-                        </Link>
-                        <Link 
-                          to="/admin/categories" 
-                          className="px-3 py-2 rounded-md hover:bg-muted flex items-center"
-                          onClick={() => setIsMobileMenuOpen(false)}
-                        >
-                          <Tag className="h-5 w-5 mr-3" />
-                          <span className="text-lg">Categories</span>
-                        </Link>
-                        <Link 
-                          to="/admin/products" 
-                          className="px-3 py-2 rounded-md hover:bg-muted flex items-center"
-                          onClick={() => setIsMobileMenuOpen(false)}
-                        >
-                          <Package className="h-5 w-5 mr-3" />
-                          <span className="text-lg">Products</span>
-                        </Link>
-                        <Link 
-                          to="/admin/quotes" 
-                          className="px-3 py-2 rounded-md hover:bg-muted flex items-center"
-                          onClick={() => setIsMobileMenuOpen(false)}
-                        >
-                          <ShoppingBag className="h-5 w-5 mr-3" />
-                          <span className="text-lg">Quotes</span>
-                        </Link>
-                      </div>
-                    )}
-                    
-                    <div className="mt-4">
-                      <Link 
-                        to="/account" 
-                        className="px-3 py-2 rounded-md hover:bg-muted flex items-center"
-                        onClick={() => setIsMobileMenuOpen(false)}
-                      >
-                        <User className="h-5 w-5 mr-3" />
-                        <span className="text-lg">Account</span>
-                      </Link>
-                      <Button 
-                        variant="ghost" 
-                        className="w-full justify-start px-3 py-2 rounded-md hover:bg-muted"
-                        onClick={handleLogout}
-                      >
-                        <LogOut className="h-5 w-5 mr-3" />
-                        <span className="text-lg">Logout</span>
-                      </Button>
-                    </div>
-                  </>
-                )}
-                
-                {!user && (
-                  <div className="mt-4">
                     <Link 
-                      to="/login" 
-                      className="w-full px-4 py-2 bg-woodwise-accent hover:bg-woodwise-brown text-white rounded-md flex justify-center"
+                      to="/admin/categories" 
+                      className="px-3 py-2 rounded-md hover:bg-muted flex items-center"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
-                      <span className="text-lg">Log In / Register</span>
+                      <Tag className="h-5 w-5 mr-3" />
+                      <span className="text-lg">Категории</span>
                     </Link>
-                  </div>
+                    <Link 
+                      to="/admin/products" 
+                      className="px-3 py-2 rounded-md hover:bg-muted flex items-center"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      <Package className="h-5 w-5 mr-3" />
+                      <span className="text-lg">Продукти</span>
+                    </Link>
+                  </>
+                )}
+                <Link 
+                  to="/account" 
+                  className="px-3 py-2 rounded-md hover:bg-muted flex items-center"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <User className="h-5 w-5 mr-3" />
+                  <span className="text-lg">Профил</span>
+                </Link>
+                {user ? (
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={handleLogout} 
+                    className="flex items-center text-woodwise-text hover:text-woodwise-accent px-3 mt-2"
+                  >
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Изход
+                  </Button>
+                ) : (
+                  <Link to="/login" onClick={() => setIsMobileMenuOpen(false)}>
+                    <Button className="bg-woodwise-accent hover:bg-woodwise-brown text-white w-full mt-2">
+                      Вход
+                    </Button>
+                  </Link>
                 )}
               </div>
             </SheetContent>

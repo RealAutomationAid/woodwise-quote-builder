@@ -55,7 +55,7 @@ const CatalogPage = () => {
     const newQuoteItems = [...quoteItems, product.id];
     setQuoteItems(newQuoteItems);
     localStorage.setItem("quoteItems", JSON.stringify(newQuoteItems));
-    toast.success(`${product.name} added to quote!`);
+    toast.success(`${product.name} беше добавен към офертата!`);
   };
 
   return (
@@ -80,7 +80,7 @@ const CatalogPage = () => {
         
         {loading ? (
           <div className="py-12 text-center">
-            <div className="animate-pulse">Loading products...</div>
+            <div className="animate-pulse">Зареждане на продукти...</div>
           </div>
         ) : (
           <>

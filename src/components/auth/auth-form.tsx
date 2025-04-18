@@ -219,14 +219,14 @@ export function AuthForm() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Email</FormLabel>
-                  {/* DIAGNOSTIC: Plain input for registration email field, no FormControl */}
-                  <input 
-                    placeholder="email@example.com" 
-                    type="email" 
-                    autoComplete="email"
-                    {...field}
-                    style={{ border: '1px solid #ccc', padding: 4, width: '100%' }}
-                  />
+                  <FormControl>
+                    <Input
+                      placeholder="email@example.com"
+                      type="email"
+                      autoComplete="email"
+                      {...field}
+                    />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}

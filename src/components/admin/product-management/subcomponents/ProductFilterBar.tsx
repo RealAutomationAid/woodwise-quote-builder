@@ -38,7 +38,7 @@ const ProductFilterBar: React.FC<ProductFilterBarProps> = ({
             <Search className="h-4 w-4" />
           </span>
           <Input
-            placeholder="Search products..."
+            placeholder="Търсене на продукти..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-8 max-w-sm"
@@ -46,10 +46,10 @@ const ProductFilterBar: React.FC<ProductFilterBarProps> = ({
         </div>
         <Select value={filterCategory || 'all'} onValueChange={(value) => setFilterCategory(value === 'all' ? null : value)}>
           <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="All Categories" />
+            <SelectValue placeholder="Всички категории" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Categories</SelectItem>
+            <SelectItem value="all">Всички категории</SelectItem>
             {categories.filter(category => {
               const valid = typeof category.id === 'string' && category.id.trim() !== '';
               if (!valid) {
@@ -77,13 +77,13 @@ const ProductFilterBar: React.FC<ProductFilterBarProps> = ({
               </Button>
             </TooltipTrigger>
             <TooltipContent>
-              <p>Clear filters</p>
+              <p>Изчисти филтрите</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
       </div>
       <Button onClick={onAddProduct}>
-        <Plus className="mr-2 h-4 w-4" /> Add Product
+        <Plus className="mr-2 h-4 w-4" /> Добави продукт
       </Button>
     </div>
   );

@@ -71,7 +71,7 @@ export function ProductFilters({
           <div className="flex items-center gap-2">
             {/* Show result count */}
             <Badge variant="outline" className="hidden md:flex">
-              {totalCount} {totalCount === 1 ? 'result' : 'results'}
+              {totalCount} {totalCount === 1 ? 'резултат' : 'резултата'}
             </Badge>
 
             {/* Show active filter count */}
@@ -83,7 +83,7 @@ export function ProductFilters({
                 onClick={handleReset}
               >
                 <FilterX className="h-4 w-4" />
-                Clear {activeFilterCount} {activeFilterCount === 1 ? 'filter' : 'filters'}
+                Изчисти {activeFilterCount} {activeFilterCount === 1 ? 'филтър' : 'филтъра'}
               </Button>
             )}
 
@@ -93,7 +93,7 @@ export function ProductFilters({
                 <DrawerTrigger asChild>
                   <Button variant="outline" size="sm" className="hidden md:flex items-center gap-1">
                     <SlidersHorizontal className="h-4 w-4" />
-                    Advanced Filters
+                    Разширени филтри
                   </Button>
                 </DrawerTrigger>
                 <DrawerContent className="max-w-2xl min-w-[600px] w-full mx-auto md:p-8 p-4">
@@ -118,7 +118,7 @@ export function ProductFilters({
                 </SheetTrigger>
                 <SheetContent>
                   <SheetHeader>
-                    <SheetTitle>Filters</SheetTitle>
+                    <SheetTitle>Филтри</SheetTitle>
                   </SheetHeader>
                   <div className="mt-6 space-y-6">
                     <MobileFilters 

@@ -43,7 +43,7 @@ export function SearchBar({ value, onChange }: SearchBarProps) {
         <Input
           type="text"
           ref={inputRef}
-          placeholder="Search products..."
+          placeholder="Търсене на продукти..."
           className="pl-9 pr-12 py-2 h-10 border-0 shadow-none focus-visible:ring-0 rounded-md"
           value={value}
           onChange={(e) => onChange(e.target.value)}

@@ -57,7 +57,7 @@ export function RecentQuotes() {
         }
       } catch (error: any) {
         console.error('Error fetching recent quotes:', error);
-        setError('Failed to load recent quotes');
+        setError('Грешка при зареждане на последните оферти');
       } finally {
         setIsLoading(false);
       }
@@ -101,7 +101,7 @@ export function RecentQuotes() {
   if (error) {
     return (
       <div className="text-center py-4 text-destructive">
-        <p>{error}</p>
+        <p>Грешка при зареждане на последните оферти</p>
       </div>
     );
   }
@@ -109,7 +109,7 @@ export function RecentQuotes() {
   if (quotes.length === 0) {
     return (
       <div className="text-center py-4 text-muted-foreground">
-        <p>You haven't submitted any quotes yet.</p>
+        <p>Все още нямате изпратени оферти.</p>
       </div>
     );
   }
@@ -123,13 +123,16 @@ export function RecentQuotes() {
         >
           <div className="space-y-1 mb-2 md:mb-0">
             <div className="flex items-center gap-2">
-              <h4 className="font-medium">Quote #{quote.id.substring(0, 8)}</h4>
+              <h4 className="font-medium">Оферта №{quote.id.substring(0, 8)}</h4>
               <Badge variant={getStatusBadgeVariant(quote.status)}>
-                {quote.status}
+                {quote.status === 'new' && 'Нова'}
+                {quote.status === 'processing' && 'Обработва се'}
+                {quote.status === 'sent' && 'Изпратена'}
+                {quote.status === 'rejected' && 'Отказана'}
               </Badge>
             </div>
             <p className="text-sm text-muted-foreground">
-              {format(new Date(quote.created_at), 'PPP')} • {quote.item_count} {quote.item_count === 1 ? 'item' : 'items'}
+              {format(new Date(quote.created_at), 'PPP', { locale: undefined })} • {quote.item_count} {quote.item_count === 1 ? 'артикул' : 'артикула'}
             </p>
           </div>
           <div className="text-right">
@@ -138,7 +141,7 @@ export function RecentQuotes() {
               href={`/quotes?id=${quote.id}`} 
               className="text-sm text-primary hover:underline"
             >
-              View Details
+              Виж детайли
             </a>
           </div>
         </div>

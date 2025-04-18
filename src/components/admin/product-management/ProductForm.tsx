@@ -124,12 +124,12 @@ export default function ProductForm({
   const addLength = () => {
     const length = parseInt(lengthInput);
     if (isNaN(length) || length <= 0) {
-      toast.error("Please enter a valid length");
+      toast.error("Моля, въведете валидна дължина");
       return;
     }
 
     if (formData.lengths?.includes(length)) {
-      toast.error("This length is already added");
+      toast.error("Тази дължина вече е добавена");
       return;
     }
 
@@ -157,13 +157,13 @@ export default function ProductForm({
     
     // Validate file type
     if (!file.type.startsWith('image/')) {
-      toast.error('Please select an image file');
+      toast.error('Моля, изберете файл с изображение');
       return;
     }
     
     // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      toast.error('Image size must be less than 5MB');
+      toast.error('Размерът на изображението трябва да е под 5MB');
       return;
     }
 

@@ -25,16 +25,24 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Loader2 } from "lucide-react";
 import { GenerateQuoteForm } from "@/components/admin/quotes/GenerateQuoteForm";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 
 // Types
 interface Quote {
   id: string;
-  user_id: string;
   quote_number: string;
-  total_amount: number;
-  status: string;
   created_at: string;
   updated_at: string;
+  status: string;
+  total_amount: number;
+  total_estimate: number;
+  user_id: string;
+  simple_customer_id?: string | null;
+  discount_code?: string | null;
+  discount_percent?: number | null;
+  note?: string | null;
 }
 
 interface QuoteItem {
@@ -72,7 +80,7 @@ interface UserProfile {
   company?: string;
 }
 
-type FilterStatus = 'all' | 'pending' | 'approved' | 'rejected' | 'completed' | 'draft' | 'ready' | 'sent';
+type FilterStatus = 'all' | 'pending' | 'ready' | 'processing' | 'completed' | 'rejected' | 'draft' | 'sent';
 
 export default function AdminQuotes() {
   const { isAdmin, session } = useAuth();
@@ -98,6 +106,12 @@ export default function AdminQuotes() {
     name: string;
     email: string;
   }[]>([]);
+  const [editQuote, setEditQuote] = useState<{
+    id: string;
+    status: string;
+    customer_id: string | null;
+    open: boolean;
+  } | null>(null);
 
   // Redirect if not admin
   useEffect(() => {
@@ -107,7 +121,7 @@ export default function AdminQuotes() {
     
     if (!isAdmin) {
       navigate('/');
-      toast.error("You don't have permission to access this page");
+      toast.error("Нямате права за достъп до тази страница");
     } else {
       fetchQuotes();
       fetchCustomers();
@@ -126,7 +140,7 @@ export default function AdminQuotes() {
       
       // Apply status filter if not 'all'
       if (filterStatus !== 'all') {
-        query = query.eq('status', filterStatus);
+        query = query.eq('status', filterStatus === 'ready' ? 'approved' : filterStatus);
       }
       
       const { data: quotesData, error: quotesError } = await query;
@@ -134,46 +148,45 @@ export default function AdminQuotes() {
       if (quotesError) throw quotesError;
       
       if (quotesData && quotesData.length > 0) {
-        setQuotes(quotesData);
+        setQuotes(quotesData.map(q => ({
+          ...q,
+          total_estimate: q.total_estimate ?? 0
+        })));
         
-        // Get the unique user IDs
-        const userIds = [...new Set(quotesData.map(quote => quote.user_id))];
-        
-        // Fetch user profiles in a separate query
-        const { data: userData, error: userError } = await supabase
-          .from('profiles')
-          .select(`
-            id,
-            first_name,
-            last_name,
-            company
-          `)
-          .in('id', userIds);
-        
-        if (userError) throw userError;
-        
-        // Create a map of user_id to profile data
+        // Extract non-null user IDs
+        const userIds = Array.from(
+          new Set(
+            quotesData
+              .map(q => q.user_id)
+              .filter((id): id is string => id !== null)
+          )
+        );
+
+        // Build a userProfiles map
         const userMap: Record<string, UserProfile> = {};
-        
-        if (userData) {
-          userData.forEach(profile => {
+        if (userIds.length > 0) {
+          const { data: userData, error: userError } = await supabase
+            .from('profiles')
+            .select('id, first_name, last_name, company')
+            .in('id', userIds);
+          if (userError) throw userError;
+          userData?.forEach(profile => {
             userMap[profile.id] = {
               id: profile.id,
-              email: '', // Email not available from profiles table
+              email: '',
               first_name: profile.first_name,
               last_name: profile.last_name,
-              company: profile.company
+              company: profile.company,
             };
           });
         }
-        
         setUserProfiles(userMap);
       } else {
         setQuotes([]);
       }
     } catch (error) {
       console.error('Error fetching quotes:', error);
-      toast.error('Failed to load quotes');
+      toast.error('Неуспешно зареждане на офертите');
     } finally {
       setLoading(false);
     }
@@ -189,27 +202,42 @@ export default function AdminQuotes() {
       
       if (profileError) throw profileError;
       
-      if (profiles && profiles.length > 0) {
-        // Get emails from auth.users table (if accessible)
-        // Note: This might not work in all environments due to RLS
-        const userIds = profiles.map(profile => profile.id);
-        
-        // For each user, try to get their email
-        const formattedCustomers = profiles.map(profile => {
-          return {
-            id: profile.id,
-            name: `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'Unknown',
-            email: 'customer@example.com' // Fallback email
-          };
+      // Get auth emails separately from auth.users
+      const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
+      const userEmailMap: Record<string, string> = {};
+      
+      if (authUsers) {
+        authUsers.users.forEach(user => {
+          userEmailMap[user.id] = user.email || '';
         });
-        
-        setCustomers(formattedCustomers);
-      } else {
-        setCustomers([]);
       }
+      
+      // Collect user customers
+      const profileCustomers = profiles?.map(profile => ({
+        id: profile.id,
+        name: `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'Unknown',
+        email: userEmailMap[profile.id] || '' // Use email from auth.users
+      })) || [];
+
+      // Fetch simple_customers
+      const sup = supabase as any;
+      const { data: simpleCusts, error: simpleError } = await sup
+        .from('simple_customers')
+        .select('id, name, email, phone')
+        .order('created_at', { ascending: false });
+
+      if (simpleError) throw simpleError;
+      const simpleCustomers = (simpleCusts as any[]).map(sc => ({
+        id: sc.id,
+        name: sc.name,
+        email: sc.email || '',
+      }));
+
+      // Combine both lists
+      setCustomers([...profileCustomers, ...simpleCustomers]);
     } catch (error) {
       console.error('Error fetching customers:', error);
-      toast.error('Failed to load customers');
+      toast.error('Неуспешно зареждане на клиентите');
     }
   };
 
@@ -244,13 +272,13 @@ export default function AdminQuotes() {
       
       // 4. Update the local state
       setQuotes(quotes.map(quote => 
-        quote.id === quoteId ? { ...quote, status } : quote
+        quote.id === quoteId ? { ...quote, status, total_estimate: quote.total_estimate ?? 0 } : quote
       ));
       
-      toast.success(`Quote ${status}`);
+      toast.success(`Офертата е със статус: ${status}`);
     } catch (error) {
       console.error('Error updating quote:', error);
-      toast.error('Failed to update quote');
+      toast.error('Неуспешно обновяване на офертата');
     }
   };
 
@@ -314,10 +342,10 @@ export default function AdminQuotes() {
         }
       }
       
-      toast.success('Stock levels updated');
+      toast.success('Наличностите са обновени');
     } catch (error) {
       console.error('Error updating product stock:', error);
-      toast.error('Failed to update some product stock levels');
+      toast.error('Неуспешно обновяване на някои наличности');
     }
   };
 
@@ -328,7 +356,7 @@ export default function AdminQuotes() {
       const newTotal = discountQuote.currentTotal - discountQuote.amount;
       
       if (newTotal < 0) {
-        toast.error('Discount cannot exceed total amount');
+        toast.error('Отстъпката не може да надвишава общата сума');
         return;
       }
       
@@ -337,7 +365,7 @@ export default function AdminQuotes() {
         .from('quotes')
         .update({ 
           total_amount: newTotal,
-          status: 'approved' 
+          status: 'ready' 
         })
         .eq('id', discountQuote.id);
       
@@ -346,7 +374,7 @@ export default function AdminQuotes() {
       // Add history record for the discount
       const historyEntry = {
         quote_id: discountQuote.id,
-        status: 'approved',
+        status: 'ready',
         notes: `Discount of $${discountQuote.amount} applied. New total: $${newTotal}`,
         created_by: session?.user?.id
       };
@@ -360,12 +388,12 @@ export default function AdminQuotes() {
       // Update the local state
       setQuotes(quotes.map(quote => 
         quote.id === discountQuote.id 
-          ? { ...quote, total_amount: newTotal, status: 'approved' } 
-          : quote
+          ? { ...quote, total_amount: newTotal, status: 'ready', total_estimate: quote.total_estimate ?? 0 } 
+          : { ...quote, total_estimate: quote.total_estimate ?? 0 }
       ));
       
       setDiscountQuote(null);
-      toast.success('Discount applied and quote approved');
+      toast.success('Отстъпката е приложена и офертата е одобрена');
     } catch (error) {
       console.error('Error applying discount:', error);
       toast.error('Failed to apply discount');
@@ -378,11 +406,81 @@ export default function AdminQuotes() {
   };
 
   const handleSendQuote = async (quoteId: string) => {
-    toast.success('Quote would be sent to the customer');
+    toast.success('Офертата ще бъде изпратена до клиента');
     
     await updateQuoteStatus(quoteId, 'sent', 'Quote sent to customer');
     
     fetchQuotes();
+  };
+
+  const updateQuoteCustomer = async (quoteId: string, customerId: string) => {
+    try {
+      const { error } = await supabase
+        .from('quotes')
+        .update({ simple_customer_id: customerId })
+        .eq('id', quoteId);
+      
+      if (error) {
+        console.error('Error updating customer:', error);
+        throw error;
+      }
+      
+      setQuotes(quotes.map(q => q.id === quoteId ? { ...q, simple_customer_id: customerId } : q));
+      toast.success('Клиентът е обновен успешно');
+    } catch (error) {
+      console.error('Error updating customer:', error);
+      toast.error('Неуспешно обновяване на клиента');
+    }
+  };
+
+  const handleOpenEditDialog = (quote: any) => {
+    setEditQuote({
+      id: quote.id,
+      status: quote.status,
+      customer_id: quote.simple_customer_id,
+      open: true
+    });
+  };
+  
+  const handleCloseEditDialog = () => {
+    setEditQuote(null);
+  };
+  
+  const handleSaveQuote = async () => {
+    if (!editQuote) return;
+    
+    try {
+      const { error } = await supabase
+        .from('quotes')
+        .update({ 
+          status: editQuote.status,
+          simple_customer_id: editQuote.customer_id 
+        })
+        .eq('id', editQuote.id);
+      
+      if (error) throw error;
+      
+      // Update local state
+      setQuotes(quotes.map(q => q.id === editQuote.id ? {
+        ...q,
+        status: editQuote.status,
+        simple_customer_id: editQuote.customer_id
+      } : q));
+      
+      // Add history record
+      await supabase.from('quote_history').insert({
+        quote_id: editQuote.id,
+        status: editQuote.status,
+        notes: 'Quote updated by admin',
+        created_by: session.user.id
+      });
+      
+      toast.success('Офертата е обновена успешно');
+      handleCloseEditDialog();
+    } catch (error) {
+      console.error('Error saving quote:', error);
+      toast.error('Неуспешно обновяване на офертата');
+    }
   };
 
   const filteredQuotes = quotes.filter(quote => {
@@ -397,6 +495,27 @@ export default function AdminQuotes() {
     return searchMatch;
   });
 
+  const getStatusBadgeVariant = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return 'warning';
+      case 'processing':
+        return 'secondary';
+      case 'completed':
+        return 'success';
+      case 'rejected':
+        return 'destructive';
+      case 'draft':
+        return 'outline';
+      case 'ready':
+        return 'default';
+      case 'sent':
+        return 'blue';
+      default:
+        return 'outline';
+    }
+  };
+
   if (!session) {
     return <div className="p-6 text-center">Loading...</div>;
   }
@@ -410,7 +529,7 @@ export default function AdminQuotes() {
       <MainHeader />
       
       <main className="flex-1 container mx-auto px-4 py-6">
-        <h1 className="text-2xl font-bold mb-6">Quote Management</h1>
+        <h1 className="text-2xl font-bold mb-6">Управление на оферти</h1>
         
         {/* Filters */}
         <div className="bg-white p-4 rounded-lg shadow mb-6 flex flex-col md:flex-row gap-4 justify-between">
@@ -419,41 +538,40 @@ export default function AdminQuotes() {
               onClick={() => setFilterStatus('all')}
               className={`px-3 py-1 rounded ${filterStatus === 'all' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
             >
-              All
+              Всички
             </button>
             <button 
               onClick={() => setFilterStatus('pending')}
               className={`px-3 py-1 rounded ${filterStatus === 'pending' ? 'bg-yellow-600 text-white' : 'bg-gray-200'}`}
             >
-              Pending
+              Получени
             </button>
             <button 
-              onClick={() => setFilterStatus('approved')}
-              className={`px-3 py-1 rounded ${filterStatus === 'approved' ? 'bg-green-600 text-white' : 'bg-gray-200'}`}
+              onClick={() => setFilterStatus('ready')}
+              className={`px-3 py-1 rounded ${filterStatus === 'ready' ? 'bg-green-600 text-white' : 'bg-gray-200'}`}
             >
-              Approved
+              Готови
             </button>
             <button 
-              onClick={() => setFilterStatus('rejected')}
-              className={`px-3 py-1 rounded ${filterStatus === 'rejected' ? 'bg-red-600 text-white' : 'bg-gray-200'}`}
+              onClick={() => setFilterStatus('processing')}
+              className={`px-3 py-1 rounded ${filterStatus === 'processing' ? 'bg-purple-600 text-white' : 'bg-gray-200'}`}
             >
-              Rejected
+              Обработва се
             </button>
             <button 
               onClick={() => setFilterStatus('completed')}
               className={`px-3 py-1 rounded ${filterStatus === 'completed' ? 'bg-purple-600 text-white' : 'bg-gray-200'}`}
             >
-              Completed
+              Завършени
             </button>
           </div>
           
           <div>
-            <input
-              type="text"
-              placeholder="Search quotes..."
-              className="px-3 py-1 border rounded"
+            <Input
+              placeholder="Търсене на оферти..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              className="max-w-xs"
             />
           </div>
         </div>
@@ -461,30 +579,30 @@ export default function AdminQuotes() {
         {/* Quotes Table */}
         <div className="bg-white rounded-lg shadow overflow-hidden">
           {loading ? (
-            <div className="p-6 text-center">Loading quotes...</div>
+            <div className="p-6 text-center">Зареждане на оферти...</div>
           ) : filteredQuotes.length === 0 ? (
-            <div className="p-6 text-center">No quotes found</div>
+            <div className="p-6 text-center">Няма намерени оферти</div>
           ) : (
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Quote #
+                    ID на оферта
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Customer
+                    Клиент
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Date
+                    Дата
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Amount
+                    Обща цена
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
+                    Статус
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
+                    Действия
                   </th>
                 </tr>
               </thead>
@@ -496,19 +614,22 @@ export default function AdminQuotes() {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-gray-900">{quote.quote_number}</div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {userProfile ? (
-                          <>
-                            <div className="text-sm text-gray-900">
-                              {userProfile.first_name} {userProfile.last_name}
-                            </div>
-                            {userProfile.company && (
-                              <div className="text-xs text-gray-500">{userProfile.company}</div>
-                            )}
-                          </>
-                        ) : (
-                          <div className="text-sm text-gray-500">User not found</div>
-                        )}
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        <Select
+                          value={quote.simple_customer_id || ""}
+                          onValueChange={(value) => updateQuoteCustomer(quote.id, value)}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Assign customer" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {customers.map((customer) => (
+                              <SelectItem key={customer.id} value={customer.id}>
+                                {customer.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {new Date(quote.created_at).toLocaleDateString()}
@@ -516,15 +637,12 @@ export default function AdminQuotes() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         ${Number(quote.total_amount).toFixed(2)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                          ${quote.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : ''} 
-                          ${quote.status === 'approved' ? 'bg-green-100 text-green-800' : ''} 
-                          ${quote.status === 'rejected' ? 'bg-red-100 text-red-800' : ''} 
-                          ${quote.status === 'completed' ? 'bg-purple-100 text-purple-800' : ''}`}
-                        >
-                          {quote.status.charAt(0).toUpperCase() + quote.status.slice(1)}
-                        </span>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        <div className="flex items-center">
+                          <Badge variant={getStatusBadgeVariant(quote.status)}>
+                            {quote.status}
+                          </Badge>
+                        </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div className="flex gap-2">
@@ -532,44 +650,40 @@ export default function AdminQuotes() {
                             onClick={() => navigate(`/quotes/${quote.id}`)}
                             className="text-blue-600 hover:text-blue-900"
                           >
-                            View
+                            Виж
                           </button>
-                          
+                          <button 
+                            onClick={() => handleOpenEditDialog(quote)}
+                            className="text-green-600 hover:text-green-900"
+                          >
+                            Редактирай
+                          </button>
                           {quote.status === 'pending' && (
-                            <>
-                              <button 
-                                onClick={() => updateQuoteStatus(quote.id, 'approved')}
-                                className="text-green-600 hover:text-green-900"
-                              >
-                                Approve
-                              </button>
-                              <button 
-                                onClick={() => updateQuoteStatus(quote.id, 'rejected')}
-                                className="text-red-600 hover:text-red-900"
-                              >
-                                Reject
-                              </button>
-                              <button 
-                                onClick={() => setDiscountQuote({
-                                  id: quote.id,
-                                  amount: 0,
-                                  currentTotal: Number(quote.total_amount)
-                                })}
-                                className="text-orange-600 hover:text-orange-900"
-                              >
-                                Discount
-                              </button>
-                            </>
-                          )}
-                          
-                          {quote.status === 'approved' && (
                             <button 
-                              onClick={() => updateQuoteStatus(quote.id, 'completed')}
-                              className="text-purple-600 hover:text-purple-900"
+                              onClick={() => setDiscountQuote({
+                                id: quote.id,
+                                amount: 0,
+                                currentTotal: Number(quote.total_amount)
+                              })}
+                              className="text-orange-600 hover:text-orange-900"
                             >
-                              Mark Complete
+                              Отстъпка
                             </button>
                           )}
+                          {quote.status === 'ready' && (
+                            <button 
+                              onClick={() => handleSendQuote(quote.id)}
+                              className="text-indigo-600 hover:text-indigo-900"
+                            >
+                              Изпрати
+                            </button>
+                          )}
+                          <button 
+                            onClick={() => handleOpenEditDialog(quote)}
+                            className="text-purple-600 hover:text-purple-900"
+                          >
+                            Запази
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -580,14 +694,84 @@ export default function AdminQuotes() {
           )}
         </div>
         
+        {/* Edit Quote Dialog */}
+        {editQuote && (
+          <Dialog open={editQuote.open} onOpenChange={(open) => !open && handleCloseEditDialog()}>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Редактирай оферта</DialogTitle>
+                <DialogDescription>
+                  Редактирайте и изпратете офертата до клиента.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="customer" className="text-right">
+                    Клиент
+                  </Label>
+                  <div className="col-span-3">
+                    <Select
+                      value={editQuote.customer_id || ""}
+                      onValueChange={(value) => setEditQuote({...editQuote, customer_id: value})}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Избери клиент" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {customers.map((customer) => (
+                          <SelectItem key={customer.id} value={customer.id}>
+                            {customer.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="status" className="text-right">
+                    Статус
+                  </Label>
+                  <div className="col-span-3">
+                    <Select
+                      value={editQuote.status}
+                      onValueChange={(value) => setEditQuote({...editQuote, status: value})}
+                    >
+                      <SelectTrigger id="status">
+                        <SelectValue placeholder="Избери статус" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="pending">Получена</SelectItem>
+                        <SelectItem value="processing">Обработва се</SelectItem>
+                        <SelectItem value="completed">Завършена</SelectItem>
+                        <SelectItem value="rejected">Отказана</SelectItem>
+                        <SelectItem value="draft">Чернова</SelectItem>
+                        <SelectItem value="ready">Готова</SelectItem>
+                        <SelectItem value="sent">Изпратена</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={handleCloseEditDialog}>
+                  Отказ
+                </Button>
+                <Button onClick={handleSaveQuote}>
+                  Запази промените
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        )}
+        
         {/* Discount Modal */}
         {discountQuote && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
-              <h2 className="text-xl font-bold mb-4">Apply Discount</h2>
+              <h2 className="text-xl font-bold mb-4">Добави отстъпка</h2>
               <div className="mb-4">
-                <label className="block text-gray-700 mb-2">Current Total: ${discountQuote.currentTotal.toFixed(2)}</label>
-                <label className="block text-gray-700 mb-2">Discount Amount ($)</label>
+                <label className="block text-gray-700 mb-2">Текуща сума: {discountQuote.currentTotal.toFixed(2)} лв.</label>
+                <label className="block text-gray-700 mb-2">Сума на отстъпката (лв.)</label>
                 <input
                   type="number"
                   min="0"
@@ -601,21 +785,21 @@ export default function AdminQuotes() {
                 />
               </div>
               <div className="mb-4">
-                <label className="block text-gray-700 mb-2">New Total: ${(discountQuote.currentTotal - discountQuote.amount).toFixed(2)}</label>
+                <label className="block text-gray-700 mb-2">Нова сума: {(discountQuote.currentTotal - discountQuote.amount).toFixed(2)} лв.</label>
               </div>
               <div className="flex justify-end gap-2">
                 <button
                   onClick={() => setDiscountQuote(null)}
                   className="px-4 py-2 bg-gray-200 rounded"
                 >
-                  Cancel
+                  Отказ
                 </button>
                 <button
                   onClick={applyDiscount}
                   className="px-4 py-2 bg-blue-600 text-white rounded"
                   disabled={discountQuote.amount <= 0 || discountQuote.amount > discountQuote.currentTotal}
                 >
-                  Apply Discount
+                  Приложи отстъпка
                 </button>
               </div>
             </div>

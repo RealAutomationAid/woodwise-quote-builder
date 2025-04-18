@@ -6,9 +6,9 @@ export function EmptyState() {
       <div className="rounded-full bg-muted p-6 mb-6">
         <SearchX className="h-12 w-12 text-muted-foreground" />
       </div>
-      <h3 className="text-xl font-medium mb-2">No products found</h3>
+      <h3 className="text-xl font-medium mb-2">Няма намерени продукти</h3>
       <p className="text-muted-foreground max-w-md">
-        No products match your search criteria. Try adjusting your filters or search term.
+        Няма продукти, отговарящи на вашите критерии за търсене. Опитайте с други филтри или ключова дума.
       </p>
     </div>
   );

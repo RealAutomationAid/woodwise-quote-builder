@@ -9,10 +9,10 @@ export default function AdminCategoriesPage() {
         <div className="flex flex-col space-y-2">
           <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
             <Tags className="h-8 w-8" />
-            Categories Management
+            Управление на категории
           </h1>
           <p className="text-muted-foreground">
-            Create, edit, and organize product categories.
+            Създавайте, редактирайте и организирайте продуктовите категории.
           </p>
         </div>
         

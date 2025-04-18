@@ -73,6 +73,7 @@ export function QuoteItem({ item, onRemove, onUpdate }: QuoteItemProps) {
             <p><span className="font-medium">Length:</span> {config.length}mm</p>
             <p><span className="font-medium">Planed:</span> {config.isPlaned ? 'Yes' : 'No'}</p>
             <p><span className="font-medium">Quantity:</span> {config.quantity}</p>
+            {config.note && <p><span className="font-medium">Note:</span> {config.note}</p>}
           </div>
         </div>
         
@@ -135,6 +136,16 @@ export function QuoteItem({ item, onRemove, onUpdate }: QuoteItemProps) {
                       min="1"
                       value={editConfig.quantity}
                       onChange={(e) => setEditConfig({...editConfig, quantity: Number(e.target.value)})}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Note</label>
+                    <Input 
+                      type="text"
+                      placeholder="Add a note for this item"
+                      value={editConfig.note || ''}
+                      onChange={(e) => setEditConfig({...editConfig, note: e.target.value})}
                     />
                   </div>
                   

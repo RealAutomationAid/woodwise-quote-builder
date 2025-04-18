@@ -136,7 +136,7 @@ export default function ProductsTab() {
         stock_quantity: typeof product.stock_quantity === 'number' ? product.stock_quantity : 0,
       })));
     } catch (error) {
-      toast.error('Failed to load products');
+      toast.error('Неуспешно зареждане на продуктите');
       console.error('Error:', error);
     } finally {
       setLoading(false);
@@ -153,15 +153,15 @@ export default function ProductsTab() {
       if (error) throw error;
       setCategories(data || []);
     } catch (error) {
-      toast.error('Failed to load categories');
+      toast.error('Неуспешно зареждане на категориите');
       console.error('Error:', error);
     }
   };
 
   const getCategoryName = (categoryId: string | null) => {
-    if (!categoryId) return 'None';
+    if (!categoryId) return 'Няма';
     const category = categories.find(cat => cat.id === categoryId);
-    return category ? category.name : 'Unknown';
+    return category ? category.name : 'Неизвестна';
   };
 
   const deleteProduct = async () => {
@@ -189,11 +189,11 @@ export default function ProductsTab() {
         }
       }
 
-      toast.success('Product deleted successfully');
+      toast.success('Продуктът е изтрит успешно');
       setProducts(products.filter(product => product.id !== currentProduct.id));
       setIsDeleteDialogOpen(false);
     } catch (error) {
-      toast.error('Failed to delete product');
+      toast.error('Неуспешно изтриване на продукт');
       console.error('Error:', error);
     }
   };
@@ -260,8 +260,8 @@ export default function ProductsTab() {
       <ProductDialog
         open={isAddDialogOpen}
         onOpenChange={setIsAddDialogOpen}
-        title="Add New Product"
-        description="Fill in the details to add a new product to your catalog."
+        title="Нов продукт"
+        description="Попълнете детайлите, за да добавите нов продукт към вашия каталог."
         categories={categories}
         onSave={handleProductSaved}
         onCancel={() => setIsAddDialogOpen(false)}
@@ -269,8 +269,8 @@ export default function ProductsTab() {
       <ProductDialog
         open={isEditDialogOpen}
         onOpenChange={setIsEditDialogOpen}
-        title="Edit Product"
-        description="Update the product details."
+        title="Редактирай продукт"
+        description="Актуализирайте детайлите на продукта."
         categories={categories}
         product={currentProduct}
         onSave={handleProductSaved}

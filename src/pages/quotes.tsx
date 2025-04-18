@@ -73,7 +73,7 @@ const QuotesHistoryPage = () => {
             mappedQuotes.push({
               id: String(quote.id),
               date: format(new Date(quote.created_at), 'yyyy-MM-dd'),
-              totalPrice: parseFloat(quote.total_amount),
+              totalPrice: parseFloat(String(quote.total_amount)),
               status: quote.status as "pending" | "processing" | "approved" | "rejected",
               items: []
             });
@@ -147,7 +147,7 @@ const QuotesHistoryPage = () => {
           mappedQuotes.push({
             id: String(quote.id),
             date: format(new Date(quote.created_at), 'yyyy-MM-dd'),
-            totalPrice: parseFloat(quote.total_amount),
+            totalPrice: parseFloat(String(quote.total_amount)),
             status: typedStatus,
             items: formattedItems
           });
@@ -185,13 +185,13 @@ const QuotesHistoryPage = () => {
       
       <main className="flex-1 container mx-auto px-4 py-6">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">Quote History</h1>
-          <Button onClick={() => navigate("/quote")}>Current Quote</Button>
+          <h1 className="text-2xl font-bold">История на оферти</h1>
+          <Button onClick={() => navigate("/quote")}>Текуща оферта</Button>
         </div>
         
         {loading ? (
           <div className="py-12 text-center">
-            <div className="animate-pulse">Loading quote history...</div>
+            <div className="animate-pulse">Зареждане на историята на офертите...</div>
           </div>
         ) : (
           <QuoteHistoryTable 
@@ -205,9 +205,9 @@ const QuotesHistoryPage = () => {
         {selectedQuote && (
           <DialogContent className="max-w-4xl">
             <DialogHeader>
-              <DialogTitle>Quote Details - {selectedQuote.id.substring(0, 8)}</DialogTitle>
+              <DialogTitle>Детайли за офертата - {selectedQuote.id.substring(0, 8)}</DialogTitle>
               <DialogDescription>
-                Created on {selectedQuote.date}
+                Създадена на {selectedQuote.date}
               </DialogDescription>
             </DialogHeader>
             
@@ -215,14 +215,17 @@ const QuotesHistoryPage = () => {
               <div className="md:col-span-2">
                 <div className="space-y-2 mb-4">
                   <div className="flex justify-between">
-                    <span className="font-medium">Status:</span>
+                    <span className="font-medium">Статус:</span>
                     <Badge className={cn('h-6 w-fit px-2 font-medium', {
                       'bg-yellow-100 text-yellow-800': selectedQuote.status === 'pending',
                       'bg-blue-100 text-blue-800': selectedQuote.status === 'processing',
                       'bg-green-100 text-green-800': selectedQuote.status === 'approved',
                       'bg-red-100 text-red-800': selectedQuote.status === 'rejected',
                     })}>
-                      {selectedQuote.status.charAt(0).toUpperCase() + selectedQuote.status.slice(1)}
+                      {selectedQuote.status === 'pending' && 'Получена'}
+                      {selectedQuote.status === 'processing' && 'Обработва се'}
+                      {selectedQuote.status === 'approved' && 'Одобрена'}
+                      {selectedQuote.status === 'rejected' && 'Отказана'}
                     </Badge>
                   </div>
                 </div>
@@ -236,7 +239,7 @@ const QuotesHistoryPage = () => {
                 ) : (
                   <div className="py-6 text-center border border-border rounded-md">
                     <p className="text-muted-foreground">
-                      Detailed items not available for this quote.
+                      Няма детайлни артикули за тази оферта.
                     </p>
                   </div>
                 )}

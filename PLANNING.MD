@@ -58,7 +58,7 @@
 * **Routing:** React Router DOM (Assumed, common choice - confirm if different)
 * **Backend Platform:** Supabase (Database, Auth, API, potentially Storage/Edge Functions)
 * **Utility Libraries:** `date-fns` (Date formatting), `uuid` (Unique IDs)
-* **Testing:** Playwright (End-to-End Testing)
+
 
 ## 6. Key Decisions & Constraints
 

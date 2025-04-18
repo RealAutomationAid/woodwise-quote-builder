@@ -34,12 +34,11 @@
     * Sub-task: Design UI for setting prices based on combinations of length, material, and processing per product.
     * Sub-task: Update Supabase schema/logic if needed (`pricing_rules` table?).
     * Sub-task: Implement the CRUD interface for these pricing rules in the Admin Panel.
-* **[ ] Testing: Implement Core E2E Tests with Playwright**
-    * Sub-task: Write test script for User Registration & Login flow.
-    * Sub-task: Write test script for Product Browse & Filtering.
-    * Sub-task: Write test script for Creating and Submitting a Quote.
-    * Sub-task: Write test script for Viewing Quote History (Client).
-    * Sub-task: Write test script for Admin Login & Viewing Quotes.
+* **[ ] UI: Localize all frontend to Bulgarian and add company details to footer and quotes (2024-06-18)**
+    * Translate all static frontend text to Bulgarian (including admin panel).
+    * Add company details to footer and to quote generation (PDF/print and on-screen).
+    * Ensure no English text remains in the UI.
+    * Do not break any existing functionality.
 
 ## Backlog (Future Work / Nice-to-Haves)
 
@@ -80,7 +79,7 @@
 
 ## Discovered During Work
 
-* **[ ] Bug: Registration email field not editable** (2024-06-17)
+* **[✓] Bug: Registration email field not editable** (2024-06-17)
     * Investigate and fix why the email field cannot be modified during registration.
 * **[ ] Bug: /quote page is broken** (2024-06-17)
     * Investigate and fix the root cause of the /quote page not loading or functioning properly.

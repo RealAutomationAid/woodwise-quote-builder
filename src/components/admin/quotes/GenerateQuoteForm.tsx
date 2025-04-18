@@ -149,7 +149,7 @@ export function GenerateQuoteForm({
       setProducts(transformedProducts);
     } catch (error) {
       console.error('Error fetching products:', error);
-      toast.error('Failed to load products');
+      toast.error('Моля, изберете продукт и дължина');
     } finally {
       setLoading(false);
     }
@@ -157,7 +157,7 @@ export function GenerateQuoteForm({
   
   function addItem() {
     if (!selectedProduct || !selectedLength) {
-      toast.error('Please select a product and length');
+      toast.error('Моля, изберете продукт и дължина');
       return;
     }
     
@@ -192,12 +192,12 @@ export function GenerateQuoteForm({
   
   async function handleSubmit(saveAsDraft = false) {
     if (!customerId) {
-      toast.error('Customer ID is required');
+      toast.error('ID на клиента е задължителен');
       return;
     }
     
     if (items.length === 0) {
-      toast.error('Please add at least one item to the quote');
+      toast.error('Трябва да добавите поне един артикул към офертата');
       return;
     }
     
@@ -265,7 +265,7 @@ export function GenerateQuoteForm({
       onClose();
     } catch (error) {
       console.error('Error generating quote:', error);
-      toast.error('Failed to generate quote');
+      toast.error('Грешка при създаване на офертата');
     } finally {
       setSending(false);
     }

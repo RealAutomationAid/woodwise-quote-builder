@@ -18,9 +18,11 @@ export interface ProductType {
 
 export interface ProductConfigType {
   length: number;
+  width?: number;
   material: string;
   isPlaned: boolean;
   quantity: number;
+  note?: string;
 }
 
 export interface QuoteItemType {
@@ -146,6 +148,7 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
         quantity: item.config.quantity,
         unit_price: item.product.pricePerUnit,
         total_price: item.product.pricePerUnit * item.config.quantity,
+        note: item.config.note
       }));
       
       console.log('Adding quote items:', quoteItemsData);

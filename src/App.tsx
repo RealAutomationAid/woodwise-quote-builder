@@ -17,6 +17,8 @@ import AdminRoute from "./components/auth/AdminRoute";
 import AdminCategoriesPage from "./pages/admin/categories";
 import AdminProductsPage from "./pages/admin/products";
 import AccountPage from "./pages/account";
+import CreateQuotePage from "./pages/admin/create-quote";
+import QuoteDetailPage from "./pages/quote-detail";
 
 const queryClient = new QueryClient();
 
@@ -45,6 +47,14 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <QuotesHistoryPage />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/quotes/:id" 
+                element={
+                  <ProtectedRoute>
+                    <QuoteDetailPage />
                   </ProtectedRoute>
                 } 
               />
@@ -79,6 +89,14 @@ const App = () => (
                     <AdminProductsPage />
                   </AdminRoute>
                 } 
+              />
+              <Route
+                path="/admin/quotes/create"
+                element={
+                  <AdminRoute>
+                    <CreateQuotePage />
+                  </AdminRoute>
+                }
               />
               <Route path="*" element={<NotFound />} />
             </Routes>
