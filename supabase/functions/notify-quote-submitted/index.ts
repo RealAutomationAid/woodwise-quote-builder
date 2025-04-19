@@ -1,3 +1,4 @@
+// @ts-nocheck
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -10,15 +11,16 @@ const corsHeaders = {
 // Create a Supabase client with the Auth context of the function
 const supabaseClient = createClient(
   Deno.env.get("SUPABASE_URL") ?? "",
-  Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "", // Use service role key for admin operations
   {
     global: {
-      headers: { Authorization: `Bearer ${Deno.env.get("SUPABASE_ANON_KEY")}` },
+      headers: { Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}` },
     },
   }
 );
 
-interface RequestBody {
+interface NewQuoteRequestBody {
+  type: 'new_quote';
   quoteId: string;
   userEmail: string;
   totalAmount: number;
@@ -29,6 +31,16 @@ interface RequestBody {
   }>;
 }
 
+interface StatusChangeRequestBody {
+  type: 'status_change';
+  quoteId: string;
+  userId: string;
+  status: string;
+  quoteNumber: string;
+}
+
+type RequestBody = NewQuoteRequestBody | StatusChangeRequestBody;
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
@@ -36,9 +48,9 @@ serve(async (req) => {
   }
 
   try {
-    const { quoteId, userEmail, totalAmount, items } = await req.json() as RequestBody;
-
-    // Fetch admin email addresses
+    const requestBody = await req.json() as RequestBody;
+    
+    // Fetch admin users
     const { data: admins, error: adminsError } = await supabaseClient
       .from("profiles")
       .select("id")
@@ -49,15 +61,91 @@ serve(async (req) => {
       throw new Error("Failed to fetch admin users");
     }
 
-    // For a real production app, you would send actual emails here
-    // using services like SendGrid, AWS SES, or Resend
-    console.log(`New quote notification would be sent to admins for quote ${quoteId}`);
-    console.log(`Customer email: ${userEmail}`);
-    console.log(`Quote total: $${totalAmount}`);
-    console.log(`Items: ${JSON.stringify(items)}`);
+    // Handle different notification types
+    if (requestBody.type === 'new_quote') {
+      const { quoteId, userEmail, totalAmount, items } = requestBody;
+      
+      // For a real production app, you would send actual emails here
+      console.log(`New quote notification would be sent to admins for quote ${quoteId}`);
+      console.log(`Customer email: ${userEmail}`);
+      console.log(`Quote total: $${totalAmount}`);
+      
+      // In-app notifications: Notify admins of new quote
+      for (const admin of admins || []) {
+        try {
+          await supabaseClient.from('notifications').insert({ 
+            user_id: admin.id,
+            type: 'new_quote',
+            message: `Нова оферта получена`,
+            quote_id: quoteId
+          });
+        } catch (error) {
+          console.error(`Failed to notify admin ${admin.id}:`, error);
+          // Continue with other admins even if one fails
+        }
+      }
+      
+      // Notify submitting user
+      const { data: userProfile, error: profileError } = await supabaseClient
+        .from('profiles')
+        .select('id')
+        .eq('email', userEmail)
+        .single();
+        
+      if (!profileError && userProfile) {
+        try {
+          await supabaseClient.from('notifications').insert({ 
+            user_id: userProfile.id,
+            type: 'quote_submitted',
+            message: `Вашата оферта е получена`,
+            quote_id: quoteId
+          });
+        } catch (error) {
+          console.error('Failed to notify user:', error);
+        }
+      }
+    } 
+    // Handle status change notifications
+    else if (requestBody.type === 'status_change') {
+      const { quoteId, userId, status, quoteNumber } = requestBody;
+      
+      // Notify the quote owner
+      if (userId) {
+        try {
+          await supabaseClient.from('notifications').insert({ 
+            user_id: userId,
+            type: 'quote_status_change',
+            message: `Оферта ${quoteNumber} е със статус: ${status}`,
+            quote_id: quoteId
+          });
+        } catch (error) {
+          console.error('Failed to notify quote owner:', error);
+        }
+      }
+      
+      // Notify admins about important status changes
+      if (['pending', 'completed', 'ready'].includes(status)) {
+        for (const admin of admins || []) {
+          // Skip if admin is the quote owner
+          if (admin.id === userId) continue;
+          
+          try {
+            await supabaseClient.from('notifications').insert({ 
+              user_id: admin.id,
+              type: 'quote_status_change',
+              message: `Оферта ${quoteNumber} е със статус: ${status}`,
+              quote_id: quoteId
+            });
+          } catch (error) {
+            console.error(`Failed to notify admin ${admin.id}:`, error);
+            // Continue with other admins even if one fails
+          }
+        }
+      }
+    }
 
     return new Response(
-      JSON.stringify({ success: true, message: "Quote notification processed" }),
+      JSON.stringify({ success: true, message: "Notification processed successfully" }),
       {
         headers: {
           "Content-Type": "application/json",
@@ -66,7 +154,7 @@ serve(async (req) => {
       }
     );
   } catch (error) {
-    console.error("Error processing quote notification:", error);
+    console.error("Error processing notification:", error);
     
     return new Response(
       JSON.stringify({ success: false, error: error.message }),

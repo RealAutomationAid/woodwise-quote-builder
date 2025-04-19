@@ -5,29 +5,23 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { MainHeader } from "@/components/layout/main-header";
 import { MainFooter } from "@/components/layout/main-footer";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { formatDate } from "@/lib/utils";
 import { 
   PlusCircle, 
   ShoppingBag, 
-  Filter, 
-  Search, 
-  Mail 
+  Filter
 } from "lucide-react";
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger 
-} from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import { Loader2 } from "lucide-react";
-import { GenerateQuoteForm } from "@/components/admin/quotes/GenerateQuoteForm";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+
+// Import our new components
+import { QuotesTable } from '@/components/admin/quotes/QuotesTable';
+import { QuoteFilters } from '@/components/admin/quotes/QuoteFilters';
+import { EditQuoteDialog } from '@/components/admin/quotes/EditQuoteDialog';
+import { updateQuoteStatus } from '@/components/admin/quotes/QuoteStatusManager';
+import { GenerateQuoteForm } from "@/components/admin/quotes/GenerateQuoteForm";
 
 // Types
 interface Quote {
@@ -43,33 +37,6 @@ interface Quote {
   discount_code?: string | null;
   discount_percent?: number | null;
   note?: string | null;
-}
-
-interface QuoteItem {
-  id: string;
-  quote_id: string;
-  product_id: string;
-  length: number;
-  material: string;
-  is_planed: boolean;
-  quantity: number;
-  unit_price: number;
-  total_price: number;
-}
-
-interface ProductData {
-  id: string;
-  name: string;
-  description?: string | null;
-  category_id?: string | null;
-  material: string;
-  lengths: number[];
-  is_planed: boolean;
-  price_per_unit: number;
-  image_url?: string | null;
-  created_at?: string;
-  updated_at?: string;
-  stock_quantity: number;
 }
 
 interface UserProfile {
@@ -148,7 +115,8 @@ export default function AdminQuotes() {
       if (quotesError) throw quotesError;
       
       if (quotesData && quotesData.length > 0) {
-        setQuotes(quotesData.map(q => ({
+        // Cast to any[] to allow total_estimate augmentation
+        setQuotes((quotesData as any[]).map((q: any) => ({
           ...q,
           total_estimate: q.total_estimate ?? 0
         })));
@@ -197,43 +165,29 @@ export default function AdminQuotes() {
       // Get profiles with role 'user'
       const { data: profiles, error: profileError } = await supabase
         .from('profiles')
-        .select('id, first_name, last_name, role')
+        .select('id, first_name, last_name, email')
         .eq('role', 'user');
-      
       if (profileError) throw profileError;
       
-      // Get auth emails separately from auth.users
-      const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
-      const userEmailMap: Record<string, string> = {};
-      
-      if (authUsers) {
-        authUsers.users.forEach(user => {
-          userEmailMap[user.id] = user.email || '';
-        });
-      }
-      
-      // Collect user customers
-      const profileCustomers = profiles?.map(profile => ({
-        id: profile.id,
-        name: `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'Unknown',
-        email: userEmailMap[profile.id] || '' // Use email from auth.users
+      const profileCustomers = profiles?.map(p => ({
+        id: `auth_${p.id}`,
+        name: `${p.first_name} ${p.last_name}`,
+        email: p.email || ''
       })) || [];
-
-      // Fetch simple_customers
-      const sup = supabase as any;
-      const { data: simpleCusts, error: simpleError } = await sup
+      
+      // Get simple customers
+      const sb = supabase as any;
+      const { data: simpleCustomersData, error: simpleError } = await sb
         .from('simple_customers')
-        .select('id, name, email, phone')
-        .order('created_at', { ascending: false });
-
+        .select('id, name, email');
       if (simpleError) throw simpleError;
-      const simpleCustomers = (simpleCusts as any[]).map(sc => ({
-        id: sc.id,
-        name: sc.name,
-        email: sc.email || '',
+      
+      const simpleCustomers = (simpleCustomersData || []).map((c: any) => ({
+        id: `simple_${c.id}`,
+        name: c.name,
+        email: c.email || ''
       }));
-
-      // Combine both lists
+      
       setCustomers([...profileCustomers, ...simpleCustomers]);
     } catch (error) {
       console.error('Error fetching customers:', error);
@@ -241,112 +195,24 @@ export default function AdminQuotes() {
     }
   };
 
-  const updateQuoteStatus = async (quoteId: string, status: string, notes?: string) => {
-    try {
-      // 1. Update the quote status
-      const { error: updateError } = await supabase
-        .from('quotes')
-        .update({ status })
-        .eq('id', quoteId);
-      
-      if (updateError) throw updateError;
-      
-      // 2. Create a history record
-      const historyEntry = {
-        quote_id: quoteId,
-        status,
-        notes: notes || `Status changed to ${status}`,
-        created_by: session?.user?.id
-      };
-      
-      const { error: historyError } = await supabase
-        .from('quote_history')
-        .insert([historyEntry]);
-      
-      if (historyError) throw historyError;
-      
-      // 3. If status is 'completed', update the product stock
-      if (status === 'completed') {
-        await updateProductStock(quoteId);
+  // Function to handle quote status updates
+  const handleUpdateQuoteStatus = async (quoteId: string, status: string, notes?: string) => {
+    if (!session?.user?.id) return;
+    
+    await updateQuoteStatus(
+      quoteId, 
+      status, 
+      notes, 
+      session.user.id,
+      (updatedQuoteId, newStatus) => {
+        // Update the local state
+        setQuotes(quotes.map(quote => 
+          quote.id === updatedQuoteId 
+            ? { ...quote, status: newStatus, total_estimate: quote.total_estimate ?? 0 } 
+            : quote
+        ));
       }
-      
-      // 4. Update the local state
-      setQuotes(quotes.map(quote => 
-        quote.id === quoteId ? { ...quote, status, total_estimate: quote.total_estimate ?? 0 } : quote
-      ));
-      
-      toast.success(`Офертата е със статус: ${status}`);
-    } catch (error) {
-      console.error('Error updating quote:', error);
-      toast.error('Неуспешно обновяване на офертата');
-    }
-  };
-
-  const updateProductStock = async (quoteId: string) => {
-    try {
-      // 1. Get quote items
-      const { data: quoteItems, error: itemsError } = await supabase
-        .from('quote_items')
-        .select('*')
-        .eq('quote_id', quoteId);
-      
-      if (itemsError) throw itemsError;
-      
-      if (!quoteItems || quoteItems.length === 0) {
-        console.warn('No items found for this quote');
-        return;
-      }
-      
-      // 2. For each item, update the product stock
-      for (const item of quoteItems) {
-        try {
-          // Get current product stock
-          const { data, error: productError } = await supabase
-            .from('products')
-            .select('id, name, stock_quantity')
-            .eq('id', item.product_id)
-            .single();
-          
-          if (productError) {
-            console.error(`Error fetching product ${item.product_id}:`, productError);
-            continue;
-          }
-          
-          // Use any type to bypass TypeScript checks
-          const product: any = data;
-          
-          if (!product) {
-            console.error(`Product not found: ${item.product_id}`);
-            continue;
-          }
-          
-          // Calculate new stock level (ensure it doesn't go below 0)
-          const currentStock = typeof product.stock_quantity === 'number' ? product.stock_quantity : 0;
-          const newStockLevel = Math.max(0, currentStock - item.quantity);
-          
-          // Update product stock
-          const { error: updateError } = await supabase
-            .from('products')
-            .update({ stock_quantity: newStockLevel } as any)
-            .eq('id', item.product_id);
-          
-          if (updateError) {
-            console.error(`Error updating stock for product ${product.name}:`, updateError);
-            continue;
-          }
-          
-          console.log(`Updated stock for ${product.name}: ${currentStock} → ${newStockLevel}`);
-        } catch (itemError) {
-          console.error(`Error processing quote item:`, itemError);
-          continue;
-        }
-      }
-      
-      toast.success('Наличностите са обновени');
-    } catch (error) {
-      console.error('Error updating product stock:', error);
-      toast.error('Неуспешно обновяване на някои наличности');
-    }
+    );
   };
 
   const applyDiscount = async () => {
@@ -385,6 +251,20 @@ export default function AdminQuotes() {
       
       if (historyError) throw historyError;
       
+      // Create notification for quote owner
+      const quoteRecord = quotes.find(q => q.id === discountQuote.id);
+      
+      if (quoteRecord?.user_id) {
+        await (supabase as any)
+          .from('notifications')
+          .insert({
+            user_id: quoteRecord.user_id,
+            type: 'quote_discount',
+            message: `Отстъпка ${discountQuote.amount}лв. е приложена към оферта ${quoteRecord.quote_number}`,
+            quote_id: discountQuote.id,
+          });
+      }
+      
       // Update the local state
       setQuotes(quotes.map(quote => 
         quote.id === discountQuote.id 
@@ -393,10 +273,10 @@ export default function AdminQuotes() {
       ));
       
       setDiscountQuote(null);
-      toast.success('Отстъпката е приложена и офертата е одобрена');
+      toast.success(`Отстъпка от ${discountQuote.amount}лв. е приложена успешно`);
     } catch (error) {
       console.error('Error applying discount:', error);
-      toast.error('Failed to apply discount');
+      toast.error('Неуспешно прилагане на отстъпка');
     }
   };
 
@@ -406,38 +286,39 @@ export default function AdminQuotes() {
   };
 
   const handleSendQuote = async (quoteId: string) => {
-    toast.success('Офертата ще бъде изпратена до клиента');
-    
-    await updateQuoteStatus(quoteId, 'sent', 'Quote sent to customer');
-    
-    fetchQuotes();
+    await handleUpdateQuoteStatus(quoteId, 'sent', 'Quote sent to customer');
   };
 
   const updateQuoteCustomer = async (quoteId: string, customerId: string) => {
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('quotes')
-        .update({ simple_customer_id: customerId })
+        .update({ 
+          customer_id: customerId 
+        })
         .eq('id', quoteId);
-      
+
       if (error) {
-        console.error('Error updating customer:', error);
-        throw error;
+        console.error('Error updating quote customer:', error);
+        toast.error('Грешка при актуализиране на клиента');
+        return false;
       }
-      
-      setQuotes(quotes.map(q => q.id === quoteId ? { ...q, simple_customer_id: customerId } : q));
-      toast.success('Клиентът е обновен успешно');
-    } catch (error) {
-      console.error('Error updating customer:', error);
-      toast.error('Неуспешно обновяване на клиента');
+
+      await fetchQuotes();
+      toast.success('Клиентът е актуализиран успешно');
+      return true;
+    } catch (err) {
+      console.error('Error updating quote customer:', err);
+      toast.error('Грешка при актуализиране на клиента');
+      return false;
     }
   };
 
-  const handleOpenEditDialog = (quote: any) => {
+  const handleOpenEditDialog = (quote: Quote) => {
     setEditQuote({
       id: quote.id,
       status: quote.status,
-      customer_id: quote.simple_customer_id,
+      customer_id: quote.simple_customer_id ? `simple_${quote.simple_customer_id}` : null,
       open: true
     });
   };
@@ -450,11 +331,17 @@ export default function AdminQuotes() {
     if (!editQuote) return;
     
     try {
+      // Get the actual simple_customer_id (without the 'simple_' prefix)
+      const dbCustomerId = editQuote.customer_id?.startsWith('simple_') 
+        ? editQuote.customer_id.replace('simple_', '') 
+        : editQuote.customer_id;
+      
+      // Use supabase update
       const { error } = await supabase
         .from('quotes')
-        .update({ 
+        .update({
           status: editQuote.status,
-          simple_customer_id: editQuote.customer_id 
+          simple_customer_id: dbCustomerId
         })
         .eq('id', editQuote.id);
       
@@ -464,22 +351,51 @@ export default function AdminQuotes() {
       setQuotes(quotes.map(q => q.id === editQuote.id ? {
         ...q,
         status: editQuote.status,
-        simple_customer_id: editQuote.customer_id
+        simple_customer_id: dbCustomerId
       } : q));
       
       // Add history record
-      await supabase.from('quote_history').insert({
-        quote_id: editQuote.id,
-        status: editQuote.status,
-        notes: 'Quote updated by admin',
-        created_by: session.user.id
-      });
+      await supabase
+        .from('quote_history')
+        .insert({
+          quote_id: editQuote.id,
+          status: editQuote.status,
+          notes: 'Quote updated by admin',
+          created_by: session?.user?.id
+        });
+      
+      // Notify the quote owner
+      const quote = quotes.find(q => q.id === editQuote.id);
+      if (quote?.user_id) {
+        await (supabase as any)
+          .from('notifications')
+          .insert({
+            user_id: quote.user_id,
+            type: 'quote_update',
+            message: `Оферта ${quote.quote_number} е актуализирана`,
+            quote_id: editQuote.id,
+          });
+      }
       
       toast.success('Офертата е обновена успешно');
       handleCloseEditDialog();
     } catch (error) {
       console.error('Error saving quote:', error);
       toast.error('Неуспешно обновяване на офертата');
+    }
+  };
+
+  // Delete a quote
+  const handleDeleteQuote = async (quoteId: string) => {
+    if (!window.confirm('Изтриване на офертата? Това действие е необратимо.')) return;
+    try {
+      const { error } = await supabase.from('quotes').delete().eq('id', quoteId);
+      if (error) throw error;
+      setQuotes(quotes.filter(q => q.id !== quoteId));
+      toast.success('Офертата е изтрита успешно');
+    } catch (error) {
+      console.error('Error deleting quote:', error);
+      toast.error('Неуспешно изтриване на офертата');
     }
   };
 
@@ -494,27 +410,6 @@ export default function AdminQuotes() {
     
     return searchMatch;
   });
-
-  const getStatusBadgeVariant = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return 'warning';
-      case 'processing':
-        return 'secondary';
-      case 'completed':
-        return 'success';
-      case 'rejected':
-        return 'destructive';
-      case 'draft':
-        return 'outline';
-      case 'ready':
-        return 'default';
-      case 'sent':
-        return 'blue';
-      default:
-        return 'outline';
-    }
-  };
 
   if (!session) {
     return <div className="p-6 text-center">Loading...</div>;
@@ -531,298 +426,96 @@ export default function AdminQuotes() {
       <main className="flex-1 container mx-auto px-4 py-6">
         <h1 className="text-2xl font-bold mb-6">Управление на оферти</h1>
         
-        {/* Filters */}
-        <div className="bg-white p-4 rounded-lg shadow mb-6 flex flex-col md:flex-row gap-4 justify-between">
-          <div className="flex gap-2">
-            <button 
-              onClick={() => setFilterStatus('all')}
-              className={`px-3 py-1 rounded ${filterStatus === 'all' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
-            >
-              Всички
-            </button>
-            <button 
-              onClick={() => setFilterStatus('pending')}
-              className={`px-3 py-1 rounded ${filterStatus === 'pending' ? 'bg-yellow-600 text-white' : 'bg-gray-200'}`}
-            >
-              Получени
-            </button>
-            <button 
-              onClick={() => setFilterStatus('ready')}
-              className={`px-3 py-1 rounded ${filterStatus === 'ready' ? 'bg-green-600 text-white' : 'bg-gray-200'}`}
-            >
-              Готови
-            </button>
-            <button 
-              onClick={() => setFilterStatus('processing')}
-              className={`px-3 py-1 rounded ${filterStatus === 'processing' ? 'bg-purple-600 text-white' : 'bg-gray-200'}`}
-            >
-              Обработва се
-            </button>
-            <button 
-              onClick={() => setFilterStatus('completed')}
-              className={`px-3 py-1 rounded ${filterStatus === 'completed' ? 'bg-purple-600 text-white' : 'bg-gray-200'}`}
-            >
-              Завършени
-            </button>
-          </div>
-          
-          <div>
-            <Input
-              placeholder="Търсене на оферти..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="max-w-xs"
+        {/* Filters component */}
+        <QuoteFilters 
+          filterStatus={filterStatus}
+          setFilterStatus={setFilterStatus}
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+        />
+        
+        {/* Quotes Table component */}
+        <QuotesTable 
+          quotes={filteredQuotes}
+          userProfiles={userProfiles}
+          updateQuoteStatus={handleUpdateQuoteStatus}
+          handleOpenEditDialog={handleOpenEditDialog}
+          handleDeleteQuote={handleDeleteQuote}
+          handleSendQuote={handleSendQuote}
+          loading={loading}
+        />
+      </main>
+      
+      {/* Edit Quote Dialog component */}
+      {editQuote && (
+        <EditQuoteDialog
+          open={editQuote.open}
+          onClose={handleCloseEditDialog}
+          onSave={handleSaveQuote}
+          editQuote={editQuote}
+          setEditQuote={setEditQuote}
+          customers={customers}
+        />
+      )}
+      
+      {/* Generate Quote Dialog */}
+      {isGeneratingQuote && selectedCustomer && (
+        <Dialog open={isGeneratingQuote} onOpenChange={setIsGeneratingQuote}>
+          <DialogContent className="max-w-4xl">
+            <DialogHeader>
+              <DialogTitle>Генериране на оферта за {selectedCustomer.name}</DialogTitle>
+            </DialogHeader>
+            <GenerateQuoteForm 
+              customerId={selectedCustomer ? selectedCustomer.id : undefined}
+              onSuccess={() => {
+                setIsGeneratingQuote(false);
+                fetchQuotes();
+              }}
             />
-          </div>
-        </div>
-        
-        {/* Quotes Table */}
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          {loading ? (
-            <div className="p-6 text-center">Зареждане на оферти...</div>
-          ) : filteredQuotes.length === 0 ? (
-            <div className="p-6 text-center">Няма намерени оферти</div>
-          ) : (
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    ID на оферта
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Клиент
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Дата
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Обща цена
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Статус
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Действия
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredQuotes.map((quote) => {
-                  const userProfile = userProfiles[quote.user_id];
-                  return (
-                    <tr key={quote.id}>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">{quote.quote_number}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        <Select
-                          value={quote.simple_customer_id || ""}
-                          onValueChange={(value) => updateQuoteCustomer(quote.id, value)}
-                        >
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Assign customer" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {customers.map((customer) => (
-                              <SelectItem key={customer.id} value={customer.id}>
-                                {customer.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {new Date(quote.created_at).toLocaleDateString()}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        ${Number(quote.total_amount).toFixed(2)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        <div className="flex items-center">
-                          <Badge variant={getStatusBadgeVariant(quote.status)}>
-                            {quote.status}
-                          </Badge>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div className="flex gap-2">
-                          <button 
-                            onClick={() => navigate(`/quotes/${quote.id}`)}
-                            className="text-blue-600 hover:text-blue-900"
-                          >
-                            Виж
-                          </button>
-                          <button 
-                            onClick={() => handleOpenEditDialog(quote)}
-                            className="text-green-600 hover:text-green-900"
-                          >
-                            Редактирай
-                          </button>
-                          {quote.status === 'pending' && (
-                            <button 
-                              onClick={() => setDiscountQuote({
-                                id: quote.id,
-                                amount: 0,
-                                currentTotal: Number(quote.total_amount)
-                              })}
-                              className="text-orange-600 hover:text-orange-900"
-                            >
-                              Отстъпка
-                            </button>
-                          )}
-                          {quote.status === 'ready' && (
-                            <button 
-                              onClick={() => handleSendQuote(quote.id)}
-                              className="text-indigo-600 hover:text-indigo-900"
-                            >
-                              Изпрати
-                            </button>
-                          )}
-                          <button 
-                            onClick={() => handleOpenEditDialog(quote)}
-                            className="text-purple-600 hover:text-purple-900"
-                          >
-                            Запази
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          )}
-        </div>
-        
-        {/* Edit Quote Dialog */}
-        {editQuote && (
-          <Dialog open={editQuote.open} onOpenChange={(open) => !open && handleCloseEditDialog()}>
-            <DialogContent className="sm:max-w-[425px]">
-              <DialogHeader>
-                <DialogTitle>Редактирай оферта</DialogTitle>
-                <DialogDescription>
-                  Редактирайте и изпратете офертата до клиента.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="customer" className="text-right">
-                    Клиент
-                  </Label>
-                  <div className="col-span-3">
-                    <Select
-                      value={editQuote.customer_id || ""}
-                      onValueChange={(value) => setEditQuote({...editQuote, customer_id: value})}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Избери клиент" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {customers.map((customer) => (
-                          <SelectItem key={customer.id} value={customer.id}>
-                            {customer.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="status" className="text-right">
-                    Статус
-                  </Label>
-                  <div className="col-span-3">
-                    <Select
-                      value={editQuote.status}
-                      onValueChange={(value) => setEditQuote({...editQuote, status: value})}
-                    >
-                      <SelectTrigger id="status">
-                        <SelectValue placeholder="Избери статус" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="pending">Получена</SelectItem>
-                        <SelectItem value="processing">Обработва се</SelectItem>
-                        <SelectItem value="completed">Завършена</SelectItem>
-                        <SelectItem value="rejected">Отказана</SelectItem>
-                        <SelectItem value="draft">Чернова</SelectItem>
-                        <SelectItem value="ready">Готова</SelectItem>
-                        <SelectItem value="sent">Изпратена</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={handleCloseEditDialog}>
-                  Отказ
-                </Button>
-                <Button onClick={handleSaveQuote}>
-                  Запази промените
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        )}
-        
-        {/* Discount Modal */}
-        {discountQuote && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
-              <h2 className="text-xl font-bold mb-4">Добави отстъпка</h2>
-              <div className="mb-4">
-                <label className="block text-gray-700 mb-2">Текуща сума: {discountQuote.currentTotal.toFixed(2)} лв.</label>
-                <label className="block text-gray-700 mb-2">Сума на отстъпката (лв.)</label>
-                <input
+          </DialogContent>
+        </Dialog>
+      )}
+      
+      {/* Discount Dialog */}
+      {discountQuote && (
+        <Dialog open={!!discountQuote} onOpenChange={() => setDiscountQuote(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Прилагане на отстъпка</DialogTitle>
+              <DialogDescription>
+                Текуща цена: {discountQuote.currentTotal}лв.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="discount">Стойност на отстъпката (лв.)</Label>
+                <Input
+                  id="discount"
                   type="number"
-                  min="0"
-                  max={discountQuote.currentTotal}
                   value={discountQuote.amount}
                   onChange={(e) => setDiscountQuote({
                     ...discountQuote,
-                    amount: Number(e.target.value)
+                    amount: parseFloat(e.target.value) || 0
                   })}
-                  className="w-full p-2 border rounded"
                 />
               </div>
-              <div className="mb-4">
-                <label className="block text-gray-700 mb-2">Нова сума: {(discountQuote.currentTotal - discountQuote.amount).toFixed(2)} лв.</label>
-              </div>
-              <div className="flex justify-end gap-2">
-                <button
-                  onClick={() => setDiscountQuote(null)}
-                  className="px-4 py-2 bg-gray-200 rounded"
-                >
-                  Отказ
-                </button>
-                <button
-                  onClick={applyDiscount}
-                  className="px-4 py-2 bg-blue-600 text-white rounded"
-                  disabled={discountQuote.amount <= 0 || discountQuote.amount > discountQuote.currentTotal}
-                >
-                  Приложи отстъпка
-                </button>
+              <div>
+                <p>Нова цена: {(discountQuote.currentTotal - discountQuote.amount).toFixed(2)}лв.</p>
               </div>
             </div>
-          </div>
-        )}
-      </main>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setDiscountQuote(null)}>
+                Отказ
+              </Button>
+              <Button onClick={applyDiscount}>
+                Приложи отстъпка
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
       
       <MainFooter />
-      
-      {/* Generate Quote Dialog */}
-      {selectedCustomer && (
-        <GenerateQuoteForm
-          isOpen={isGeneratingQuote}
-          onClose={() => {
-            setIsGeneratingQuote(false);
-            setSelectedCustomer(null);
-            fetchQuotes();
-          }}
-          customerId={selectedCustomer.id}
-          customerName={selectedCustomer.name}
-          customerEmail={selectedCustomer.email}
-        />
-      )}
     </div>
   );
 }

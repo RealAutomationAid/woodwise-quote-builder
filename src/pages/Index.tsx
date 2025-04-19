@@ -15,7 +15,8 @@ import {
   Truck,
   Calculator,
   RefreshCw,
-  Search
+  Search,
+  CheckCircle2
 } from "lucide-react";
 import { useState } from "react";
 import { 
@@ -62,8 +63,8 @@ const Index = () => {
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <Logo />
           <div className="flex gap-4">
-            <Button variant="outline" onClick={() => navigate("/login")}>Вход</Button>
-            <Button onClick={() => navigate("/catalog")}>Разгледайте продуктите</Button>
+            <Button variant="outline" onClick={() => navigate("/login")} className="border-primary text-primary hover:bg-primary/10 hover:text-primary">Вход</Button>
+            <Button onClick={() => navigate("/catalog")} className="bg-primary text-white hover:bg-primary/90">Разгледайте продуктите</Button>
           </div>
         </div>
       </header>
@@ -71,27 +72,40 @@ const Index = () => {
       <main className="flex-1">
         {/* Hero Section with Image Background */}
         <section className="relative overflow-hidden" style={{ 
-          backgroundImage: "url('https://images.unsplash.com/photo-1562937825-61a266fef65f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80')", 
+          backgroundImage: "url('https://images.pexels.com/photos/6608896/pexels-photo-6608896.jpeg?auto=compress&cs=tinysrgb&w=1920')", 
           backgroundSize: "cover",
-          backgroundPosition: "center"
+          backgroundPosition: "center",
+          height: "750px"
         }}>
-          <div className="absolute inset-0 bg-black/50"></div>
+          <div className="absolute inset-0 bg-black/60 bg-gradient-to-r from-black/80 to-black/40"></div>
           
-          <div className="relative container mx-auto px-4 py-20 md:py-32">
+          <div className="relative container mx-auto px-4 py-20 md:py-32 h-full flex items-center">
             <div className="max-w-3xl">
-              <Badge className="mb-4 bg-white/20 text-white hover:bg-white/25 transition-colors">
-                Онлайн калкулатор за оферти
-              </Badge>
-              <h1 className="text-4xl md:text-6xl font-bold mb-6 text-white leading-tight">
-                Персонализирани дървени решения <br />за всеки проект
-              </h1>
-              <p className="text-xl md:text-2xl mb-8 text-white/90 max-w-2xl">
+              <div className="relative mb-12">
+                <div className="absolute -left-6 top-0 w-1 h-32 bg-primary"></div>
+                <Badge className="mb-6 bg-primary/90 text-white hover:bg-primary/95 transition-colors">
+                  Премиум дървени материали
+                </Badge>
+                <h1 className="text-5xl md:text-7xl font-bold text-white leading-tight">
+                  <span className="block mb-3">Персонализирани</span>
+                  <span className="block text-transparent bg-clip-text bg-gradient-to-r from-primary via-primary/90 to-primary/70 mb-3">
+                    дървени решения
+                  </span>
+                  <div className="flex items-center">
+                    <span className="block bg-white/10 backdrop-blur-sm p-2 pl-4 rounded-lg">за всеки проект</span>
+                    <div className="ml-4 h-1 w-24 bg-primary/70 rounded-full"></div>
+                  </div>
+                </h1>
+              </div>
+              <p className="text-xl md:text-2xl mb-8 text-white/90 max-w-xl relative">
+                <span className="absolute -left-4 top-0 w-1 h-full bg-white/30"></span>
                 Конфигурирайте, изчислете и поръчайте премиум дървени продукти според вашите изисквания. Бързо, точно и без излишни усилия.
               </p>
-              <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex flex-col sm:flex-row gap-4 relative">
+                <div className="absolute -left-10 -bottom-12 w-32 h-32 rounded-full border-2 border-dashed border-primary/30 z-0"></div>
                 <Button 
                   size="lg" 
-                  className="bg-white text-primary hover:bg-white/90"
+                  className="bg-primary text-white hover:bg-primary/90 relative z-10"
                   onClick={() => navigate("/catalog")}
                 >
                   Започнете с вашата оферта
@@ -100,7 +114,7 @@ const Index = () => {
                 <Button 
                   size="lg" 
                   variant="outline" 
-                  className="border-white text-primary bg-white/80 hover:bg-white"
+                  className="border-white text-white hover:bg-white/20 transition-colors relative z-10"
                   onClick={() => navigate("/catalog")}
                 >
                   Разгледайте продуктите
@@ -200,7 +214,7 @@ const Index = () => {
         <section className="py-16 bg-white">
           <div className="container mx-auto px-4">
             <div className="text-center mb-12">
-              <Badge className="mb-4">Категории продукти</Badge>
+              <Badge className="mb-4 bg-primary/10 text-primary">Категории продукти</Badge>
               <h2 className="text-3xl font-bold mb-4">Разгледайте нашите дървени решения</h2>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
                 Разгледайте нашата гама от висококачествени дървени продукти, подходящи за търговски и жилищни приложения.
@@ -211,31 +225,32 @@ const Index = () => {
               {[
                 {
                   title: "Конструкционна дървесина",
-                  image: "https://images.unsplash.com/photo-1582450871972-ab5ca641643d?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+                  image: "https://images.pexels.com/photos/6474462/pexels-photo-6474462.jpeg?auto=compress&cs=tinysrgb&w=800",
                   description: "Високоякостна дървесина за строителни проекти – греди, колони и рамки.",
                   icon: <Home className="h-5 w-5" />
                 },
                 {
                   title: "Декинг материали",
-                  image: "https://images.unsplash.com/photo-1513694203232-719a280e022f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+                  image: "https://images.pexels.com/photos/7028544/pexels-photo-7028544.jpeg?auto=compress&cs=tinysrgb&w=800",
                   description: "Премиум дървесина, устойчива на атмосферни влияния – идеална за тераси и външни пространства.",
                   icon: <Settings className="h-5 w-5" />
                 },
                 {
                   title: "Интериорно обзавеждане",
-                  image: "https://images.unsplash.com/photo-1580693815118-4a1d5d417226?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+                  image: "https://images.pexels.com/photos/7319316/pexels-photo-7319316.jpeg?auto=compress&cs=tinysrgb&w=800",
                   description: "Фина дървесина за вътрешни приложения – подове, панели и лайсни.",
                   icon: <SquarePen className="h-5 w-5" />
                 },
               ].map((category, index) => (
-                <Card key={index} className="overflow-hidden group cursor-pointer hover:shadow-md transition-shadow"
+                <Card key={index} className="overflow-hidden group cursor-pointer hover:shadow-md transition-shadow border border-border/50"
                       onClick={() => navigate("/catalog")}>
-                  <div className="h-48 bg-woodwise-light relative overflow-hidden">
+                  <div className="h-52 relative overflow-hidden">
                     <img 
                       src={category.image} 
                       alt={category.title} 
                       className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300"
                     />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   </div>
                   <CardHeader>
                     <CardTitle className="flex items-center">
@@ -316,7 +331,7 @@ const Index = () => {
         <section className="py-16 bg-white">
           <div className="container mx-auto px-4">
             <div className="text-center mb-12">
-              <Badge className="mb-4">Отзиви</Badge>
+              <Badge className="mb-4 bg-primary/10 text-primary">Отзиви</Badge>
               <h2 className="text-3xl font-bold mb-4">Какво казват нашите клиенти</h2>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
                 Не вярвайте само на нашите думи – вижте мненията на клиенти, използвали нашите продукти и калкулатор за оферти.
@@ -330,34 +345,48 @@ const Index = () => {
                     quote: "Калкулаторът за оферти направи процеса изключително лесен и получих точна цена за моята тераса. Дървесината пристигна точно по спецификация и качеството беше отлично.",
                     author: "Михаил Т.",
                     title: "Собственик на жилище",
-                    rating: 5
+                    rating: 5,
+                    image: "https://images.pexels.com/photos/1681010/pexels-photo-1681010.jpeg?auto=compress&cs=tinysrgb&w=150"
                   },
                   {
                     quote: "Като строителен предприемач имам нужда от надеждни доставчици. Валекс винаги доставя качествена дървесина навреме, а системата за оферти ми спестява часове.",
                     author: "Сара Ж.",
                     title: "Строителен предприемач",
-                    rating: 5
+                    rating: 5,
+                    image: "https://images.pexels.com/photos/733872/pexels-photo-733872.jpeg?auto=compress&cs=tinysrgb&w=150"
                   },
                   {
                     quote: "Реновирах дома си и имах нужда от специфични размери за лайсни. Персонализираните опции бяха идеални, а цените бяха по-добри от големите магазини.",
                     author: "Давид Л.",
                     title: "Любител майстор",
-                    rating: 4
+                    rating: 4,
+                    image: "https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=150"
                   }
                 ].map((testimonial, index) => (
                   <CarouselItem key={index}>
-                    <Card className="border border-border/30 shadow-sm">
-                      <CardContent className="pt-8 px-6">
+                    <Card className="border border-border/30 shadow-md bg-woodwise-background/30">
+                      <CardContent className="pt-8 px-6 md:px-8">
                         <div className="flex mb-4">
                           {Array(testimonial.rating).fill(0).map((_, i) => (
                             <Star key={i} className="h-5 w-5 text-amber-500 fill-amber-500" />
                           ))}
+                          {Array(5 - testimonial.rating).fill(0).map((_, i) => (
+                            <Star key={i} className="h-5 w-5 text-amber-100" />
+                          ))}
                         </div>
-                        <p className="text-lg mb-6 italic">"{testimonial.quote}"</p>
+                        <p className="text-lg md:text-xl mb-6 italic text-woodwise-text">"{testimonial.quote}"</p>
                         <div className="flex items-center">
-                          <div className="bg-primary/10 text-primary h-10 w-10 rounded-full flex items-center justify-center mr-3">
-                            {testimonial.author.charAt(0)}
-                          </div>
+                          {testimonial.image ? (
+                            <img
+                              src={testimonial.image}
+                              alt={testimonial.author}
+                              className="h-12 w-12 rounded-full object-cover mr-4"
+                            />
+                          ) : (
+                            <div className="bg-primary/10 text-primary h-12 w-12 rounded-full flex items-center justify-center mr-4">
+                              {testimonial.author.charAt(0)}
+                            </div>
+                          )}
                           <div>
                             <p className="font-semibold">{testimonial.author}</p>
                             <p className="text-sm text-muted-foreground">{testimonial.title}</p>
@@ -380,7 +409,7 @@ const Index = () => {
         <section className="py-16 bg-woodwise-background">
           <div className="container mx-auto px-4">
             <div className="text-center mb-12">
-              <Badge className="mb-4">Вдъхновение</Badge>
+              <Badge className="mb-4 bg-primary/10 text-primary">Вдъхновение</Badge>
               <h2 className="text-3xl font-bold mb-4">Галерия проекти</h2>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
                 Вижте как нашите продукти се използват в реални проекти от клиенти и професионалисти.
@@ -389,29 +418,29 @@ const Index = () => {
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[
-                { title: "Modern Deck", category: "Outdoor", image: "https://images.unsplash.com/photo-1604014059716-34a3cc0e3156?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" },
-                { title: "Rustic Kitchen", category: "Interior", image: "https://images.unsplash.com/photo-1582037928769-351569db0392?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" },
-                { title: "Garden Pergola", category: "Outdoor", image: "https://images.unsplash.com/photo-1597767521589-fec27bf12b19?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" },
-                { title: "Custom Shelving", category: "Interior", image: "https://images.unsplash.com/photo-1551216223-163e0870c264?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" },
-                { title: "Timber Frame Home", category: "Structural", image: "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" },
-                { title: "Garden Bridge", category: "Landscape", image: "https://images.unsplash.com/photo-1586351012965-861624544334?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" },
+                { title: "Модерна тераса", category: "Външно", image: "https://images.pexels.com/photos/4946775/pexels-photo-4946775.jpeg?auto=compress&cs=tinysrgb&w=800" },
+                { title: "Рустик кухня", category: "Интериор", image: "https://images.pexels.com/photos/6782567/pexels-photo-6782567.jpeg?auto=compress&cs=tinysrgb&w=800" },
+                { title: "Градинска пергола", category: "Външно", image: "https://images.pexels.com/photos/5997993/pexels-photo-5997993.jpeg?auto=compress&cs=tinysrgb&w=800" },
+                { title: "Дървени рафтове", category: "Интериор", image: "https://images.pexels.com/photos/7005439/pexels-photo-7005439.jpeg?auto=compress&cs=tinysrgb&w=800" },
+                { title: "Дървена къща", category: "Конструкция", image: "https://images.pexels.com/photos/2510067/pexels-photo-2510067.jpeg?auto=compress&cs=tinysrgb&w=800" },
+                { title: "Градински мост", category: "Ландшафт", image: "https://images.pexels.com/photos/4846097/pexels-photo-4846097.jpeg?auto=compress&cs=tinysrgb&w=800" },
               ].map((project, index) => (
-                <div key={index} className="group relative overflow-hidden rounded-lg cursor-pointer h-64">
+                <div key={index} className="group relative overflow-hidden rounded-lg cursor-pointer h-72 shadow-md">
                   <img 
                     src={project.image} 
                     alt={project.title} 
-                    className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105"
+                    className="w-full h-full object-cover object-center transition-transform duration-500 ease-out group-hover:scale-110"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex flex-col justify-end p-4 text-white">
-                    <Badge className="self-start mb-2 bg-primary">{project.category}</Badge>
-                    <h3 className="text-lg font-semibold">{project.title}</h3>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-80 flex flex-col justify-end p-6 text-white">
+                    <Badge className="self-start mb-2 bg-primary hover:bg-primary/90">{project.category}</Badge>
+                    <h3 className="text-xl font-semibold group-hover:text-primary/90 transition-colors">{project.title}</h3>
                   </div>
                 </div>
               ))}
             </div>
             
             <div className="text-center mt-10">
-              <Button onClick={() => navigate("/catalog")}>Вземете материали за вашия проект<ArrowRight className="ml-2 h-5 w-5" /></Button>
+              <Button onClick={() => navigate("/catalog")} className="mt-6">Вземете материали за вашия проект<ArrowRight className="ml-2 h-5 w-5" /></Button>
             </div>
           </div>
         </section>
@@ -451,6 +480,16 @@ const Index = () => {
                       <p className="text-muted-foreground">Персонализираните размери намаляват отпадъка, а всички остатъци се рециклират.</p>
                     </div>
                   </div>
+                  
+                  <div className="flex items-start">
+                    <div className="bg-woodwise-accent/10 p-2 rounded-full mr-3 text-woodwise-accent mt-1">
+                      <CheckCircle2 className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold mb-1">Качество и дълготрайност</h3>
+                      <p className="text-muted-foreground">Дървените изделия с високо качество имат по-дълъг живот и допринасят за намаляване на потреблението.</p>
+                    </div>
+                  </div>
                 </div>
                 
                 <Button variant="outline" className="border-woodwise-accent text-woodwise-accent hover:bg-woodwise-accent/10">
@@ -458,41 +497,93 @@ const Index = () => {
                 </Button>
               </div>
               
-              <div className="rounded-lg overflow-hidden">
+              <div className="rounded-lg overflow-hidden shadow-lg">
                 <img 
-                  src="https://images.unsplash.com/photo-1473116763249-2faaef81ccda?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" 
+                  src="https://images.pexels.com/photos/1632790/pexels-photo-1632790.jpeg?auto=compress&cs=tinysrgb&w=800" 
                   alt="Sustainable forestry" 
-                  className="w-full h-auto object-cover"
+                  className="w-full h-auto object-cover hover:scale-105 transition-transform duration-500"
                 />
               </div>
             </div>
           </div>
         </section>
 
+        {/* Services Section */}
+        <section className="py-16 bg-white">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-12">
+              <Badge className="mb-4 bg-primary/10 text-primary">Услуги</Badge>
+              <h2 className="text-3xl font-bold mb-4">Какво ви предлагаме</h2>
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                От качествени материали до професионални съвети - ние сме вашият партньор във всички проекти свързани с дървесина.
+              </p>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+              {[
+                {
+                  title: "Качествени материали",
+                  description: "Внимателно подбрана дървесина от проверени доставчици и устойчиви източници.",
+                  image: "https://images.pexels.com/photos/6102837/pexels-photo-6102837.jpeg?auto=compress&cs=tinysrgb&w=800"
+                },
+                {
+                  title: "Персонализирани размери",
+                  description: "Предлагаме рязане на дървесина по вашите точни спецификации и изисквания.",
+                  image: "https://images.pexels.com/photos/6308028/pexels-photo-6308028.jpeg?auto=compress&cs=tinysrgb&w=800"
+                },
+                {
+                  title: "Професионални съвети",
+                  description: "Нашият екип от експерти ще ви помогне да изберете най-подходящите материали за вашия проект.",
+                  image: "https://images.pexels.com/photos/6422123/pexels-photo-6422123.jpeg?auto=compress&cs=tinysrgb&w=800"
+                },
+                {
+                  title: "Бърза доставка",
+                  description: "Осигуряваме навременна доставка до вашия обект или адрес с минимално закъснение.",
+                  image: "https://images.pexels.com/photos/6233081/pexels-photo-6233081.jpeg?auto=compress&cs=tinysrgb&w=800"
+                }
+              ].map((service, index) => (
+                <div key={index} className="group cursor-pointer">
+                  <div className="rounded-lg overflow-hidden mb-4 shadow-md">
+                    <img
+                      src={service.image}
+                      alt={service.title}
+                      className="w-full h-48 object-cover object-center transition-transform duration-300 group-hover:scale-105"
+                    />
+                  </div>
+                  <h3 className="text-xl font-semibold mb-2 group-hover:text-primary transition-colors">{service.title}</h3>
+                  <p className="text-muted-foreground">{service.description}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
         {/* CTA Section */}
-        <section className="py-16 bg-primary text-white">
+        <section className="py-16 bg-gradient-to-r from-primary to-primary/80 text-white">
           <div className="container mx-auto px-4 text-center">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Готови ли сте да започнете вашия проект?</h2>
-            <p className="text-xl mb-8 max-w-2xl mx-auto text-white/90">
-              Създайте профил, за да запазвате и следите вашите оферти, или разгледайте каталога ни веднага.
-            </p>
-            <div className="flex flex-col sm:flex-row justify-center gap-4">
-              <Button 
-                size="lg" 
-                className="bg-white text-primary hover:bg-white/90"
-                onClick={() => navigate("/catalog")}
-              >
-                Създайте оферта сега
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
-              <Button 
-                size="lg" 
-                variant="outline" 
-                className="border-white text-white hover:bg-white/10"
-                onClick={() => navigate("/login")}
-              >
-                Създайте профил
-              </Button>
+            <div className="max-w-3xl mx-auto bg-white/10 p-8 md:p-12 rounded-lg backdrop-blur-sm">
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">Готови ли сте да започнете вашия проект?</h2>
+              <p className="text-xl mb-8 max-w-2xl mx-auto text-white/90">
+                Създайте профил, за да запазвате и следите вашите оферти, или разгледайте каталога ни веднага.
+              </p>
+              <div className="flex flex-col sm:flex-row justify-center gap-4">
+                <Button 
+                  size="lg" 
+                  className="bg-white text-primary hover:bg-white/90"
+                  onClick={() => navigate("/catalog")}
+                >
+                  Създайте оферта сега
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
+                <Button 
+                  size="lg" 
+                  variant="outline" 
+                  className="border-white text-white hover:bg-white/20 transition-colors"
+                  onClick={() => navigate("/login")}
+                >
+                  Създайте профил
+                </Button>
+              </div>
             </div>
           </div>
         </section>

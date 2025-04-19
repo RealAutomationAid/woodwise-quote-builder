@@ -2,8 +2,10 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart, User, LogOut, Menu, ChevronDown, Package, ClipboardList, Tag, Settings, Home, ShoppingBag, PlusCircle } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { NotificationBell } from "@/components/ui/NotificationBell";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useQuote } from "@/contexts/QuoteContext";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,10 +17,14 @@ type MainHeaderProps = {
   quoteItemCount?: number;
 };
 
-export function MainHeader({ quoteItemCount = 0 }: MainHeaderProps) {
+export function MainHeader({ quoteItemCount }: MainHeaderProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const { user, isAdmin, signOut } = useAuth();
+  const { quoteItems } = useQuote();
+  
+  // Use the count from the context, or fallback to prop if provided
+  const itemCount = quoteItemCount !== undefined ? quoteItemCount : quoteItems.length;
 
   useEffect(() => {
     const handleScroll = () => {
@@ -121,13 +127,14 @@ export function MainHeader({ quoteItemCount = 0 }: MainHeaderProps) {
           <Link to="/quote" className="relative">
             <Button variant="ghost" size="icon" className="text-woodwise-text hover:text-woodwise-accent" aria-label="View Quote">
               <ShoppingCart className="h-5 w-5" />
-              {quoteItemCount > 0 && (
+              {itemCount > 0 && (
                 <span className="absolute -top-1 -right-1 bg-woodwise-accent text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
-                  {quoteItemCount}
+                  {itemCount}
                 </span>
               )}
             </Button>
           </Link>
+          <NotificationBell />
           
           <div className="hidden md:block">
             {user ? (

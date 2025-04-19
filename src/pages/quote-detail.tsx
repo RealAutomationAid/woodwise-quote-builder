@@ -48,6 +48,8 @@ interface Quote {
   simple_customer_id?: string;
   discount_code?: string;
   discount_percent?: number;
+  contact_email?: string | null;
+  contact_phone?: string | null;
 }
 
 const QuoteDetailPage = () => {
@@ -72,8 +74,11 @@ const QuoteDetailPage = () => {
       setLoading(true);
       setError(null);
       
+      // Cast supabase client to any for custom tables and columns
+      const sup = supabase as any;
+      
       // Fetch quote
-      const { data: quoteData, error: quoteError } = await supabase
+      const { data: quoteData, error: quoteError } = await sup
         .from('quotes')
         .select('*')
         .eq('id', id)
@@ -82,7 +87,7 @@ const QuoteDetailPage = () => {
       if (quoteError) throw quoteError;
       
       // Fetch quote items
-      const { data: itemsData, error: itemsError } = await supabase
+      const { data: itemsData, error: itemsError } = await sup
         .from('quote_items')
         .select(`
           *,
@@ -100,11 +105,12 @@ const QuoteDetailPage = () => {
       
       // Fetch customer if available
       let customerData = null;
-      if (quoteData.simple_customer_id) {
-        const { data, error: customerError } = await supabase
+      const qd: any = quoteData;
+      if (qd.simple_customer_id) {
+        const { data, error: customerError } = await sup
           .from('simple_customers')
           .select('*')
-          .eq('id', quoteData.simple_customer_id)
+          .eq('id', qd.simple_customer_id)
           .single();
           
         if (!customerError && data) {
@@ -113,7 +119,7 @@ const QuoteDetailPage = () => {
       }
       
       // Set the quote state with all necessary data
-      setQuote(quoteData as Quote);
+      setQuote((quoteData as any) as Quote);
       setCustomer(customerData);
       setQuoteItems(mappedItems);
       
@@ -266,15 +272,20 @@ const QuoteDetailPage = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {customer ? (
-                <div className="space-y-1">
-                  <p className="font-medium">{customer.name}</p>
-                  {customer.email && <p className="text-sm">{customer.email}</p>}
-                  {customer.phone && <p className="text-sm">{customer.phone}</p>}
-                </div>
-              ) : (
-                <p className="text-muted-foreground italic">Няма избран клиент</p>
-              )}
+              <div className="space-y-1">
+                {customer ? (
+                  <>
+                    <p className="font-medium">{customer.name}</p>
+                    {customer.email && <p className="text-sm">{customer.email}</p>}
+                    {customer.phone && <p className="text-sm">{customer.phone}</p>}
+                  </>
+                ) : null}
+                {quote?.contact_email && <p className="text-sm">Email: {quote.contact_email}</p>}
+                {quote?.contact_phone && <p className="text-sm">Телефон: {quote.contact_phone}</p>}
+                {!customer && !quote?.contact_email && !quote?.contact_phone && (
+                  <p className="text-muted-foreground italic">Няма контактна информация</p>
+                )}
+              </div>
             </CardContent>
           </Card>
           

@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Info, Plus } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { ProductDetailView } from "@/components/catalog/product-detail-view";
+import { ProductType as QuoteProductType } from "@/contexts/QuoteContext";
 
 export type ProductType = {
   id: string;
@@ -18,10 +19,25 @@ export type ProductType = {
   pricePerUnit: number;
   price_per_unit?: number;
   description?: string;
-  stock_quantity?: number;
+  stock_quantity: number;
   created_at?: string;
   updated_at?: string;
 };
+
+// Helper function to convert between different product type formats
+export function convertToQuoteProduct(product: ProductType): QuoteProductType {
+  return {
+    id: product.id,
+    name: product.name,
+    category: product.category,
+    material: product.material,
+    lengths: product.lengths,
+    isPlaned: product.isPlaned,
+    pricePerUnit: product.pricePerUnit || (product.price_per_unit as number),
+    description: product.description,
+    stock_quantity: product.stock_quantity
+  };
+}
 
 type ProductCardProps = {
   product: ProductType;

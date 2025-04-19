@@ -87,7 +87,7 @@ export default function CreateQuotePage() {
       setProducts(data);
     } catch (e) {
       console.error(e);
-      toast.error('Failed to load products');
+      toast.error('Неуспешно зареждане на продуктите');
     }
   };
 
@@ -100,7 +100,7 @@ export default function CreateQuotePage() {
       setCategories(data);
     } catch (e) {
       console.error(e);
-      toast.error('Failed to load categories');
+      toast.error('Неуспешно зареждане на категориите');
     }
   };
 
@@ -142,7 +142,7 @@ export default function CreateQuotePage() {
       setCustomers(combinedCustomers);
     } catch (e) {
       console.error(e);
-      toast.error('Failed to load customers');
+      toast.error('Неуспешно зареждане на клиентите');
     }
   };
 
@@ -178,7 +178,7 @@ export default function CreateQuotePage() {
 
   const handleCreateCustomer = async () => {
     if (!newCustomerName.trim()) {
-      toast.error('Name cannot be empty');
+      toast.error('Името не може да бъде празно');
       return;
     }
     // use untyped client for new table
@@ -249,10 +249,10 @@ export default function CreateQuotePage() {
       setNewCustomerShippingZipCode('');
       setNewCustomerShippingCountry('');
       setIsNewCustomerModalOpen(false);
-      toast.success('Customer created');
+      toast.success('Клиентът е създаден успешно');
     } catch (e) {
       console.error(e);
-      toast.error('Failed to create customer');
+      toast.error('Неуспешно създаване на клиент');
     }
   };
 
@@ -260,7 +260,7 @@ export default function CreateQuotePage() {
     const sup = supabase as any;
     // Check if customer selection is "none" or if there are no line items
     if (selectedCustomer === "none" || lineItems.length === 0) {
-      toast.error('Select customer and add items');
+      toast.error('Моля, изберете клиент и добавете артикули');
       return;
     }
     
@@ -310,21 +310,21 @@ export default function CreateQuotePage() {
           .from('public_quote_links')
           .insert([{ quote_id: quote.id, token }]);
         if (linkErr) throw linkErr;
-        toast.success('Quote submitted. Link: ' + window.location.origin + '/quotes/public/' + token);
+        toast.success('Офертата е изпратена. Линк: ' + window.location.origin + '/quotes/public/' + token);
       } else {
-        toast.success('Draft saved');
+        toast.success('Черновата е запазена');
       }
       navigate('/admin/quotes');
     } catch (e) {
       console.error(e);
-      toast.error('Failed to save quote');
+      toast.error('Неуспешно запазване на офертата');
     }
   };
 
   // Function to apply discount to all line items
   const applyGlobalDiscount = () => {
     if (discountPercent <= 0 || discountPercent > 100) {
-      toast.error('Discount must be between 1 and 100');
+      toast.error('Отстъпката трябва да е между 1 и 100');
       return;
     }
     
@@ -337,7 +337,7 @@ export default function CreateQuotePage() {
     );
     
     setIsApplyingDiscount(false);
-    toast.success(`Applied ${discountPercent}% discount to all items`);
+    toast.success(`Приложена е ${discountPercent}% отстъпка към всички артикули`);
   };
 
   return (
@@ -345,10 +345,10 @@ export default function CreateQuotePage() {
       <MainHeader />
       <main className="flex-1 container mx-auto px-4 py-8">
         <div className="mb-8 flex justify-between items-center">
-          <h1 className="text-3xl font-bold text-gray-900">Create Quote</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Създаване на оферта</h1>
           <div className="space-x-3">
-            <Button variant="outline" onClick={() => handleSaveQuote('draft')}>Save as Draft</Button>
-            <Button className="bg-blue-600 hover:bg-blue-700" onClick={() => handleSaveQuote('pending')}>Submit Quote</Button>
+            <Button variant="outline" onClick={() => handleSaveQuote('draft')}>Запази като чернова</Button>
+            <Button className="bg-blue-600 hover:bg-blue-700" onClick={() => handleSaveQuote('pending')}>Изпрати офертата</Button>
           </div>
         </div>
 
@@ -356,22 +356,22 @@ export default function CreateQuotePage() {
           {/* Customer Panel - Smaller, moved to sidebar */}
           <div className="lg:col-span-3 space-y-6">
             <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-              <h2 className="text-xl font-semibold mb-4 text-gray-900">Customer</h2>
+              <h2 className="text-xl font-semibold mb-4 text-gray-900">Клиент</h2>
               <div className="space-y-4">
                 <div>
-                  <label className="text-sm font-medium text-gray-700 mb-1 block">Select Customer</label>
+                  <label className="text-sm font-medium text-gray-700 mb-1 block">Изберете клиент</label>
                   <Select 
                     value={selectedCustomer} 
                     onValueChange={setSelectedCustomer}
                   >
                     <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select Customer" />
+                      <SelectValue placeholder="Изберете клиент" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="none">None</SelectItem>
+                      <SelectItem value="none">Няма</SelectItem>
                       {customers.map(c => (
                         <SelectItem key={c.id} value={c.id}>
-                          {c.name} {c.type === 'auth' ? '(Account)' : ''}
+                          {c.name} {c.type === 'auth' ? '(Акаунт)' : ''}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -383,16 +383,16 @@ export default function CreateQuotePage() {
                   variant="outline" 
                   onClick={() => setIsNewCustomerModalOpen(true)}
                 >
-                  + New Customer
+                  + Нов клиент
                 </Button>
               </div>
             </div>
 
             {/* Note Field */}
             <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-              <h2 className="text-xl font-semibold mb-4 text-gray-900">Note</h2>
+              <h2 className="text-xl font-semibold mb-4 text-gray-900">Бележка</h2>
               <Textarea 
-                placeholder="Add a note about this quote..."
+                placeholder="Добавете бележка към тази оферта..."
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
                 className="min-h-[100px]"
@@ -401,13 +401,13 @@ export default function CreateQuotePage() {
 
             {/* Categories Panel */}
             <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-              <h2 className="text-xl font-semibold mb-4 text-gray-900">Categories</h2>
+              <h2 className="text-xl font-semibold mb-4 text-gray-900">Категории</h2>
               <Select value={selectedCategory} onValueChange={setSelectedCategory}>
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Filter by Category" />
+                  <SelectValue placeholder="Филтрирай по категория" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
+                  <SelectItem value="all">Всички категории</SelectItem>
                   {categories.map(c => (
                     <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
                   ))}
@@ -419,7 +419,7 @@ export default function CreateQuotePage() {
           {/* Line Items - Now the main focus */}
           <div className="lg:col-span-6 bg-white p-6 rounded-lg shadow-sm border border-gray-100">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold text-gray-900">Quote Items</h2>
+              <h2 className="text-xl font-semibold text-gray-900">Артикули в офертата</h2>
               
               {/* Global discount controls */}
               {lineItems.length > 0 && (
@@ -428,7 +428,7 @@ export default function CreateQuotePage() {
                   size="sm" 
                   onClick={() => setIsApplyingDiscount(true)}
                 >
-                  Apply Discount
+                  Приложи отстъпка
                 </Button>
               )}
             </div>
@@ -436,16 +436,16 @@ export default function CreateQuotePage() {
             {isApplyingDiscount && (
               <div className="mb-4 p-4 bg-blue-50 rounded-lg border border-blue-100 flex items-end gap-3">
                 <div className="flex-1 space-y-1">
-                  <label className="text-sm font-medium text-gray-700">Discount Code</label>
+                  <label className="text-sm font-medium text-gray-700">Код за отстъпка</label>
                   <Input
                     value={discountCode}
                     onChange={e => setDiscountCode(e.target.value.toUpperCase())}
-                    placeholder="Optional"
+                    placeholder="По избор"
                     className="w-full"
                   />
                 </div>
                 <div className="w-24 space-y-1">
-                  <label className="text-sm font-medium text-gray-700">Discount %</label>
+                  <label className="text-sm font-medium text-gray-700">Отстъпка %</label>
                   <Input
                     type="number"
                     min="0"
@@ -460,14 +460,14 @@ export default function CreateQuotePage() {
                     size="sm" 
                     onClick={applyGlobalDiscount}
                   >
-                    Apply
+                    Приложи
                   </Button>
                   <Button 
                     size="sm" 
                     variant="ghost" 
                     onClick={() => setIsApplyingDiscount(false)}
                   >
-                    Cancel
+                    Отказ
                   </Button>
                 </div>
               </div>
@@ -475,8 +475,8 @@ export default function CreateQuotePage() {
             
             {lineItems.length === 0 ? (
               <div className="text-center py-12 bg-gray-50 rounded-lg border border-dashed border-gray-300">
-                <div className="text-gray-500 mb-3">No items added yet</div>
-                <p className="text-sm text-gray-400">Select products from the catalog to add to this quote</p>
+                <div className="text-gray-500 mb-3">Все още няма добавени артикули</div>
+                <p className="text-sm text-gray-400">Изберете продукти от каталога, за да ги добавите към тази оферта</p>
               </div>
             ) : (
               <div className="space-y-4">
@@ -489,7 +489,7 @@ export default function CreateQuotePage() {
                     
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-2">
                       <div className="space-y-1">
-                        <label className="text-xs text-gray-500">Quantity</label>
+                        <label className="text-xs text-gray-500">Количество</label>
                         <Input 
                           type="number" 
                           min="1" 
@@ -513,7 +513,7 @@ export default function CreateQuotePage() {
                       </div>
                       
                       <div className="space-y-1">
-                        <label className="text-xs text-gray-500">Length</label>
+                        <label className="text-xs text-gray-500">Дължина</label>
                         <Input 
                           type="number" 
                           value={item.length} 
@@ -530,7 +530,7 @@ export default function CreateQuotePage() {
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-xs text-gray-500">Width</label>
+                        <label className="text-xs text-gray-500">Ширина</label>
                         <Input 
                           type="number" 
                           value={item.width || ''} 
@@ -548,7 +548,7 @@ export default function CreateQuotePage() {
                       
                       {item.material && (
                         <div className="space-y-1">
-                          <label className="text-xs text-gray-500">Material</label>
+                          <label className="text-xs text-gray-500">Материал</label>
                           <Input 
                             value={item.material} 
                             onChange={(e) => {
@@ -564,7 +564,7 @@ export default function CreateQuotePage() {
                       )}
                       
                       <div className="space-y-1">
-                        <label className="text-xs text-gray-500">Discount %</label>
+                        <label className="text-xs text-gray-500">Отстъпка %</label>
                         <Input 
                           type="number" 
                           min="0" 
@@ -589,7 +589,7 @@ export default function CreateQuotePage() {
                       </div>
 
                       <div className="md:col-span-4 space-y-1">
-                        <label className="text-xs text-gray-500">Notes</label>
+                        <label className="text-xs text-gray-500">Бележки</label>
                         <Input 
                           value={item.note || ''} 
                           onChange={(e) => {
@@ -618,7 +618,7 @@ export default function CreateQuotePage() {
                 ))}
                 
                 <div className="flex justify-between pt-4 border-t mt-6">
-                  <span className="font-medium">Total</span>
+                  <span className="font-medium">Общо</span>
                   <span className="text-xl font-bold">${lineItems.reduce((sum, li) => sum + li.total, 0).toFixed(2)}</span>
                 </div>
               </div>
@@ -627,7 +627,7 @@ export default function CreateQuotePage() {
 
           {/* Products Catalog - Moved to right side */}
           <div className="lg:col-span-3 bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-            <h2 className="text-xl font-semibold mb-4 text-gray-900">Products</h2>
+            <h2 className="text-xl font-semibold mb-4 text-gray-900">Продукти</h2>
             <div className="space-y-3 max-h-[600px] overflow-y-auto pr-2">
               {products
                 .filter(p => selectedCategory === 'all' || p.category_id === selectedCategory)
@@ -647,7 +647,7 @@ export default function CreateQuotePage() {
                       )}
                       <div className="flex-1">
                         <h3 className="font-medium">{p.name}</h3>
-                        <p className="text-sm text-gray-500 truncate">${p.price_per_unit}</p>
+                        <p className="text-sm text-gray-500 truncate">{`лв. ${p.price_per_unit}`}</p>
                       </div>
                       <Button size="sm" variant="ghost" className="px-2">
                         +
@@ -666,74 +666,74 @@ export default function CreateQuotePage() {
           <Dialog open onOpenChange={setIsNewCustomerModalOpen}>
             <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>New Customer</DialogTitle>
-                <DialogDescription>Enter customer details. Only Name and Email are required.</DialogDescription>
+                <DialogTitle>Нов клиент</DialogTitle>
+                <DialogDescription>Въведете данни за клиента. Само име и имейл са задължителни.</DialogDescription>
               </DialogHeader>
               
               <div className="space-y-6">
                 {/* Basic Information */}
                 <fieldset className="border rounded-md p-4">
-                  <legend className="text-sm font-semibold px-2">Basic Information</legend>
+                  <legend className="text-sm font-semibold px-2">Основна информация</legend>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="text-sm font-medium block mb-1">
-                        Name <span className="text-red-500">*</span>
+                        Име <span className="text-red-500">*</span>
                       </label>
                       <Input
                         value={newCustomerName}
                         onChange={e => setNewCustomerName(e.target.value)}
-                        placeholder="Name"
+                        placeholder="Име"
                         className="w-full"
                         required
                       />
                     </div>
                     <div>
                       <label className="text-sm font-medium block mb-1">
-                        Email <span className="text-red-500">*</span>
+                        Имейл <span className="text-red-500">*</span>
                       </label>
                       <Input
                         value={newCustomerEmail}
                         onChange={e => setNewCustomerEmail(e.target.value)}
-                        placeholder="Email"
+                        placeholder="Имейл"
                         type="email"
                         className="w-full"
                         required
                       />
                     </div>
                     <div>
-                      <label className="text-sm font-medium block mb-1">Phone</label>
+                      <label className="text-sm font-medium block mb-1">Телефон</label>
                       <Input
                         value={newCustomerPhone}
                         onChange={e => setNewCustomerPhone(e.target.value)}
-                        placeholder="Phone"
+                        placeholder="Телефон"
                         type="tel"
                         className="w-full"
                       />
                     </div>
                     <div>
-                      <label className="text-sm font-medium block mb-1">Company Name</label>
+                      <label className="text-sm font-medium block mb-1">Име на фирма</label>
                       <Input
                         value={newCustomerCompanyName}
                         onChange={e => setNewCustomerCompanyName(e.target.value)}
-                        placeholder="Company Name"
+                        placeholder="Име на фирма"
                         className="w-full"
                       />
                     </div>
                     <div>
-                      <label className="text-sm font-medium block mb-1">Tax ID / VAT Number</label>
+                      <label className="text-sm font-medium block mb-1">ДДС номер / Булстат</label>
                       <Input
                         value={newCustomerTaxId}
                         onChange={e => setNewCustomerTaxId(e.target.value)}
-                        placeholder="Tax ID"
+                        placeholder="ДДС номер / Булстат"
                         className="w-full"
                       />
                     </div>
                     <div>
-                      <label className="text-sm font-medium block mb-1">Billing Email</label>
+                      <label className="text-sm font-medium block mb-1">Имейл за фактуриране</label>
                       <Input
                         value={newCustomerBillingEmail}
                         onChange={e => setNewCustomerBillingEmail(e.target.value)}
-                        placeholder="Billing Email"
+                        placeholder="Имейл за фактуриране"
                         type="email"
                         className="w-full"
                       />
@@ -743,50 +743,50 @@ export default function CreateQuotePage() {
                 
                 {/* Billing Address */}
                 <fieldset className="border rounded-md p-4">
-                  <legend className="text-sm font-semibold px-2">Billing Address</legend>
+                  <legend className="text-sm font-semibold px-2">Адрес за фактуриране</legend>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="md:col-span-2">
-                      <label className="text-sm font-medium block mb-1">Address</label>
+                      <label className="text-sm font-medium block mb-1">Адрес</label>
                       <Input
                         value={newCustomerAddress}
                         onChange={e => setNewCustomerAddress(e.target.value)}
-                        placeholder="Address"
+                        placeholder="Адрес"
                         className="w-full"
                       />
                     </div>
                     <div>
-                      <label className="text-sm font-medium block mb-1">City</label>
+                      <label className="text-sm font-medium block mb-1">Град</label>
                       <Input
                         value={newCustomerCity}
                         onChange={e => setNewCustomerCity(e.target.value)}
-                        placeholder="City"
+                        placeholder="Град"
                         className="w-full"
                       />
                     </div>
                     <div>
-                      <label className="text-sm font-medium block mb-1">State/Province</label>
+                      <label className="text-sm font-medium block mb-1">Област</label>
                       <Input
                         value={newCustomerState}
                         onChange={e => setNewCustomerState(e.target.value)}
-                        placeholder="State"
+                        placeholder="Област"
                         className="w-full"
                       />
                     </div>
                     <div>
-                      <label className="text-sm font-medium block mb-1">Zip/Postal Code</label>
+                      <label className="text-sm font-medium block mb-1">Пощенски код</label>
                       <Input
                         value={newCustomerZipCode}
                         onChange={e => setNewCustomerZipCode(e.target.value)}
-                        placeholder="Zip Code"
+                        placeholder="Пощенски код"
                         className="w-full"
                       />
                     </div>
                     <div>
-                      <label className="text-sm font-medium block mb-1">Country</label>
+                      <label className="text-sm font-medium block mb-1">Държава</label>
                       <Input
                         value={newCustomerCountry}
                         onChange={e => setNewCustomerCountry(e.target.value)}
-                        placeholder="Country"
+                        placeholder="Държава"
                         className="w-full"
                       />
                     </div>
@@ -795,50 +795,50 @@ export default function CreateQuotePage() {
                 
                 {/* Shipping Address */}
                 <fieldset className="border rounded-md p-4">
-                  <legend className="text-sm font-semibold px-2">Shipping Address</legend>
+                  <legend className="text-sm font-semibold px-2">Адрес за доставка</legend>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="md:col-span-2">
-                      <label className="text-sm font-medium block mb-1">Address</label>
+                      <label className="text-sm font-medium block mb-1">Адрес</label>
                       <Input
                         value={newCustomerShippingAddress}
                         onChange={e => setNewCustomerShippingAddress(e.target.value)}
-                        placeholder="Shipping Address"
+                        placeholder="Адрес за доставка"
                         className="w-full"
                       />
                     </div>
                     <div>
-                      <label className="text-sm font-medium block mb-1">City</label>
+                      <label className="text-sm font-medium block mb-1">Град</label>
                       <Input
                         value={newCustomerShippingCity}
                         onChange={e => setNewCustomerShippingCity(e.target.value)}
-                        placeholder="Shipping City"
+                        placeholder="Град за доставка"
                         className="w-full"
                       />
                     </div>
                     <div>
-                      <label className="text-sm font-medium block mb-1">State/Province</label>
+                      <label className="text-sm font-medium block mb-1">Област</label>
                       <Input
                         value={newCustomerShippingState}
                         onChange={e => setNewCustomerShippingState(e.target.value)}
-                        placeholder="Shipping State"
+                        placeholder="Област за доставка"
                         className="w-full"
                       />
                     </div>
                     <div>
-                      <label className="text-sm font-medium block mb-1">Zip/Postal Code</label>
+                      <label className="text-sm font-medium block mb-1">Пощенски код</label>
                       <Input
                         value={newCustomerShippingZipCode}
                         onChange={e => setNewCustomerShippingZipCode(e.target.value)}
-                        placeholder="Shipping Zip Code"
+                        placeholder="Пощенски код за доставка"
                         className="w-full"
                       />
                     </div>
                     <div>
-                      <label className="text-sm font-medium block mb-1">Country</label>
+                      <label className="text-sm font-medium block mb-1">Държава</label>
                       <Input
                         value={newCustomerShippingCountry}
                         onChange={e => setNewCustomerShippingCountry(e.target.value)}
-                        placeholder="Shipping Country"
+                        placeholder="Държава за доставка"
                         className="w-full"
                       />
                     </div>
@@ -847,8 +847,8 @@ export default function CreateQuotePage() {
               </div>
                 
               <DialogFooter>
-                <Button variant="outline" onClick={() => setIsNewCustomerModalOpen(false)}>Cancel</Button>
-                <Button onClick={handleCreateCustomer}>Create Customer</Button>
+                <Button variant="outline" onClick={() => setIsNewCustomerModalOpen(false)}>Отказ</Button>
+                <Button onClick={handleCreateCustomer}>Създай клиент</Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>

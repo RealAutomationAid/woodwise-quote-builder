@@ -1,6 +1,6 @@
 # TASKS.MD - Woodwise Quote Builder
 
-**Last Updated:** 2025-04-16
+**Last Updated:** 2025-04-18
 
 ## Milestones
 
@@ -39,12 +39,23 @@
     * Add company details to footer and to quote generation (PDF/print and on-screen).
     * Ensure no English text remains in the UI.
     * Do not break any existing functionality.
+* **[ ] Feature: In-App Notifications: Notify users/admins about quote status changes.**
+    * Sub-task: Draft and apply SQL migration for notifications table (Done)
+    * Sub-task: Update admin quote status change to insert notification records (Done)
+    * Sub-task: Update Edge Functions to insert notifications on status changes.
+    * Sub-task: Add NotificationBell UI to `MainHeader` (Done)
+    * Sub-task: Implement Notifications dropdown and mark-as-read functionality (Done)
+    * Sub-task: Subscribe to notifications via Supabase Realtime (Done)
+    * Sub-task: Write tests and update README/documentation.
+* **[ ] Feature: Capture contact info on quote submission (Client Panel) (2025-04-20)**
+    * Sub-task: Prompt user for phone or email when submitting a quote. (Done)
+    * Sub-task: Save contact info in `submitQuote` through Supabase. (Done)
+    * Sub-task: Display contact info in Admin Panel quote list and detail views. (Detail view done)
 
 ## Backlog (Future Work / Nice-to-Haves)
 
 * **[✓] Feature: Advanced Product Filtering/Search:** More granular filters, sorting options.
 * **[✓] Feature: User Profile Management:** Allow users to update their name, password.
-* **[ ] Feature: In-App Notifications:** Notify users/admins about quote status changes.
 * **[ ] Feature: Admin Dashboard Analytics:** Basic stats (quotes per period, common products).
 * **[ ] UI/UX: Improve Password Reset Flow:** Enhance UI/UX for password recovery.
 * **[ ] Refactor: Explore Supabase Edge Functions:** Evaluate moving logic like PDF generation or complex calculations to Edge Functions.
@@ -55,6 +66,11 @@
 
 ## Completed (Recent)
 
+* **[✓] Implemented Full Sign-Up Flow with Role Assignment** (2024-06-18)
+    * Created dedicated /signup route with proper Bulgarian text
+    * Implemented proper role assignment (user) for new registrations
+    * Ensured RLS policies correctly protect data based on user role
+    * Added navigation from login to signup page
 * **[✓] Implemented Account Management Page** with profile editing, password changing, and recent quotes overview.
 * **[✓] Implemented Advanced Product Filtering/Search** with advanced filters, sorting, and optimized backend.
 * **[✓] Implemented Basic Authentication** (Login, Register - Supabase Auth).
@@ -83,3 +99,5 @@
     * Investigate and fix why the email field cannot be modified during registration.
 * **[ ] Bug: /quote page is broken** (2024-06-17)
     * Investigate and fix the root cause of the /quote page not loading or functioning properly.
+* **[ ] Bug: Forbidden GET /auth/v1/admin/users on /admin/quotes** (2024-06-18)
+    * The admin quotes page tries to call supabase.auth.admin.listUsers() from the frontend, which requires a service role key and always fails with 403 Forbidden. This is not possible from the browser for security reasons. Fix by removing or replacing this call with a secure backend function or by only using data available in the 'profiles' table.

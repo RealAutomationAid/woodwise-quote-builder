@@ -18,7 +18,9 @@ import AdminCategoriesPage from "./pages/admin/categories";
 import AdminProductsPage from "./pages/admin/products";
 import AccountPage from "./pages/account";
 import CreateQuotePage from "./pages/admin/create-quote";
+import EditQuotePage from "./pages/admin/edit-quote";
 import QuoteDetailPage from "./pages/quote-detail";
+import SignupPage from "./pages/signup";
 
 const queryClient = new QueryClient();
 
@@ -33,6 +35,7 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/login" element={<LoginPage />} />
+              <Route path="/signup" element={<SignupPage />} />
               <Route path="/catalog" element={<CatalogPage />} />
               <Route 
                 path="/quote" 
@@ -95,6 +98,14 @@ const App = () => (
                 element={
                   <AdminRoute>
                     <CreateQuotePage />
+                  </AdminRoute>
+                }
+              />
+              <Route
+                path="/admin/edit-quote/:quoteId"
+                element={
+                  <AdminRoute>
+                    <EditQuotePage />
                   </AdminRoute>
                 }
               />

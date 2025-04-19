@@ -16,6 +16,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { Link, useNavigate } from "react-router-dom";
 
 const loginSchema = z.object({
   email: z.string().nonempty("Email is required"),
@@ -33,9 +34,14 @@ const registerSchema = z.object({
   path: ["confirmPassword"],
 });
 
-export function AuthForm() {
-  const [isLogin, setIsLogin] = useState(true);
+export interface AuthFormProps {
+  isRegistration?: boolean;
+}
+
+export function AuthForm({ isRegistration = false }: AuthFormProps) {
+  const [isLogin, setIsLogin] = useState(!isRegistration);
   const { signIn, signUp } = useAuth();
+  const navigate = useNavigate();
   
   const loginForm = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
@@ -78,35 +84,39 @@ export function AuthForm() {
   async function onRegisterSubmit(values: z.infer<typeof registerSchema>) {
     console.log('Register submit values:', values); // Debug log
     try {
-      const { data, error } = await supabase.auth.signUp({
-        email: values.email,
-        password: values.password,
-        options: {
-          data: {
-            first_name: values.firstName,
-            last_name: values.lastName
-          }
+      const { data, error } = await signUp(
+        values.email, 
+        values.password,
+        {
+          first_name: values.firstName,
+          last_name: values.lastName
         }
-      });
+      );
 
-      if (error) throw error;
+      if (error) {
+        console.error("Registration error:", error);
+        if (error.message.includes("User already registered")) {
+          toast.error("Този имейл адрес вече е регистриран. Моля опитайте с друг или използвайте формата за вход.");
+        } else {
+          toast.error(`Регистрацията не беше успешна: ${error.message}`);
+        }
+        return;
+      }
       
       if (data?.user) {
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .upsert({
-            id: data.user.id,
-            first_name: values.firstName,
-            last_name: values.lastName
-          });
-
-        if (profileError) throw profileError;
-
-        toast.success("Registration successful! You can now log in.");
-        handleToggleLogin(true);
+        toast.success("Регистрацията е успешна! Сега ще бъдете пренасочени.");
+        // Wait a bit before redirecting to ensure the toast is seen
+        setTimeout(() => {
+          navigate("/catalog");
+        }, 1500);
       }
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to register");
+      console.error("Signup execution error:", error);
+      if (error instanceof Error) {
+        toast.error(`Грешка: ${error.message}`);
+      } else {
+        toast.error("Възникна неочаквана грешка при регистрацията. Моля опитайте отново по-късно.");
+      }
     }
   }
 
@@ -278,25 +288,21 @@ export function AuthForm() {
               Forgot Password?
             </Button>
             <div className="mt-4">
-              <span className="text-sm text-muted-foreground">Don't have an account? </span>
-              <Button 
-                variant="link" 
-                className="text-sm text-woodwise-accent p-0"
-                onClick={() => handleToggleLogin(false)}
-              >
-                Register here
-              </Button>
+              <span className="text-sm text-muted-foreground">Нямате акаунт? </span>
+              <Link to="/signup" className="text-sm text-woodwise-accent hover:underline">
+                Регистрирайте се сега
+              </Link>
             </div>
           </>
         ) : (
           <div>
-            <span className="text-sm text-muted-foreground">Already have an account? </span>
+            <span className="text-sm text-muted-foreground">Вече имате акаунт? </span>
             <Button 
               variant="link" 
               className="text-sm text-woodwise-accent p-0"
               onClick={() => handleToggleLogin(true)}
             >
-              Login here
+              Влезте тук
             </Button>
           </div>
         )}

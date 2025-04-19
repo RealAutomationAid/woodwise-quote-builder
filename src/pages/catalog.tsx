@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { MainHeader } from "@/components/layout/main-header";
 import { MainFooter } from "@/components/layout/main-footer";
-import { ProductType } from "@/components/catalog/product-card";
+import { ProductType, convertToQuoteProduct } from "@/components/catalog/product-card";
 import { ProductFilters } from "@/components/catalog/product-filters";
 import { ProductConfigType } from "@/components/catalog/product-detail-view";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { useQuote } from "@/contexts/QuoteContext";
 
 // New component imports
 import { CatalogHeader } from "@/components/catalog/catalog-header";
@@ -21,8 +22,8 @@ const CatalogPage = () => {
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   
-  // State for the shopping cart/quote
-  const [quoteItems, setQuoteItems] = useState<string[]>([]);
+  // Use the quote context instead of local state
+  const { addItem } = useQuote();
   
   // Use the custom hook for filtering
   const { filters, setFilters, categories, materials, filteredProducts, totalCount } = useProductFilters(products);
@@ -42,27 +43,26 @@ const CatalogPage = () => {
     };
     
     loadProducts();
-    
-    // Check if there are items in localStorage
-    const savedQuoteItems = localStorage.getItem("quoteItems");
-    if (savedQuoteItems) {
-      setQuoteItems(JSON.parse(savedQuoteItems));
-    }
   }, []);
 
   // Handle adding a product to the quote
   const handleAddToQuote = (product: ProductType, config?: ProductConfigType) => {
-    const newQuoteItems = [...quoteItems, product.id];
-    setQuoteItems(newQuoteItems);
-    localStorage.setItem("quoteItems", JSON.stringify(newQuoteItems));
+    // Convert the product to the format expected by the quote context
+    const quoteProduct = convertToQuoteProduct(product);
+    
+    // Use the addItem function from the context
+    addItem(quoteProduct, config || {
+      length: product.lengths[0],
+      material: product.material,
+      isPlaned: product.isPlaned,
+      quantity: 1
+    });
     toast.success(`${product.name} беше добавен към офертата!`);
   };
 
   return (
     <div className="min-h-screen flex flex-col bg-woodwise-background">
-      <MainHeader 
-        quoteItemCount={quoteItems.length} 
-      />
+      <MainHeader />
       
       <ProductFilters 
         filters={filters}

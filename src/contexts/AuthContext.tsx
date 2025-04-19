@@ -9,7 +9,7 @@ interface AuthContextType {
   isAdmin: boolean;
   profile: any | null;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string) => Promise<{ data: any, error: any }>;
+  signUp: (email: string, password: string, userData?: { first_name?: string, last_name?: string }) => Promise<{ data: any, error: any }>;
   signOut: () => Promise<void>;
 }
 
@@ -118,10 +118,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (error) throw error;
   };
 
-  const signUp = async (email: string, password: string) => {
-    const response = await supabase.auth.signUp({ email, password });
-    if (response.error) throw response.error;
-    return response;
+  const signUp = async (email: string, password: string, userData?: { first_name?: string, last_name?: string }) => {
+    try {
+      // Create the auth user - profile will be created automatically via database trigger
+      const response = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            first_name: userData?.first_name || '',
+            last_name: userData?.last_name || ''
+          }
+        }
+      });
+      
+      if (response.error) throw response.error;
+      
+      return response;
+    } catch (error) {
+      console.error("Signup error:", error);
+      throw error;
+    }
   };
 
   const signOut = async () => {
