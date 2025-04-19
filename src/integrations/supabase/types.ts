@@ -95,6 +95,7 @@ export type Database = {
           name: string
           price_per_unit: number
           updated_at: string
+          stock_quantity: number
         }
         Insert: {
           category_id?: string | null
@@ -108,6 +109,7 @@ export type Database = {
           name: string
           price_per_unit: number
           updated_at?: string
+          stock_quantity?: number
         }
         Update: {
           category_id?: string | null
@@ -121,6 +123,7 @@ export type Database = {
           name?: string
           price_per_unit?: number
           updated_at?: string
+          stock_quantity?: number
         }
         Relationships: [
           {
@@ -130,6 +133,89 @@ export type Database = {
             referencedRelation: "categories"
             referencedColumns: ["id"]
           },
+        ]
+      }
+      shopping_bags: {
+        Row: {
+          id: string
+          user_id: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shopping_bags_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      shopping_bag_items: {
+        Row: {
+          id: string
+          bag_id: string
+          product_id: string
+          length: number
+          material: string
+          is_planed: boolean
+          quantity: number
+          note: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          bag_id: string
+          product_id: string
+          length: number
+          material: string
+          is_planed?: boolean
+          quantity?: number
+          note?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          bag_id?: string
+          product_id?: string
+          length?: number
+          material?: string
+          is_planed?: boolean
+          quantity?: number
+          note?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shopping_bag_items_bag_id_fkey"
+            columns: ["bag_id"]
+            isOneToOne: false
+            referencedRelation: "shopping_bags"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shopping_bag_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          }
         ]
       }
       profiles: {

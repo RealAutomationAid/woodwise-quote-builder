@@ -1,9 +1,11 @@
-
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Pencil, Trash } from "lucide-react";
-import { ProductType } from "@/components/catalog/product-card";
-import { ProductConfigType } from "@/components/catalog/product-detail-view";
+import { 
+  ProductType as ContextProductType,
+  ProductConfigType as ContextProductConfigType,
+  QuoteItemType as ContextQuoteItemType 
+} from "@/contexts/QuoteContext";
 import { useState } from "react";
 import {
   Dialog,
@@ -11,18 +13,18 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogDescription,
 } from "@/components/ui/dialog";
 
-export type QuoteItemType = {
-  id: string;
-  product: ProductType;
-  config: ProductConfigType;
-};
+// Re-export the types to maintain backward compatibility
+export type ProductType = ContextProductType;
+export type ProductConfigType = ContextProductConfigType;
+export type QuoteItemType = ContextQuoteItemType;
 
 type QuoteItemProps = {
   item: QuoteItemType;
   onRemove?: (id: string) => void;
-  onUpdate?: (id: string, config: ProductConfigType) => void;
+  onUpdate?: (id: string, ProductConfigType) => void;
 };
 
 export function QuoteItem({ item, onRemove, onUpdate }: QuoteItemProps) {
@@ -30,6 +32,21 @@ export function QuoteItem({ item, onRemove, onUpdate }: QuoteItemProps) {
   const [editConfig, setEditConfig] = useState<ProductConfigType>({...config});
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   
+  // Defensive: If product is missing, render a fallback
+  if (!product) {
+    return (
+      <div className="border border-border rounded-md p-4 bg-white text-destructive">
+        <div className="font-bold">Product data missing</div>
+        <div className="text-sm">This quote item is invalid or corrupted. Please remove it and add the product again.</div>
+        {onRemove && (
+          <Button variant="destructive" size="sm" className="mt-2" onClick={() => onRemove(item.id)}>
+            Remove
+          </Button>
+        )}
+      </div>
+    );
+  }
+
   const handleRemove = () => {
     if (onRemove) {
       onRemove(item.id);
@@ -56,6 +73,7 @@ export function QuoteItem({ item, onRemove, onUpdate }: QuoteItemProps) {
             <p><span className="font-medium">Length:</span> {config.length}mm</p>
             <p><span className="font-medium">Planed:</span> {config.isPlaned ? 'Yes' : 'No'}</p>
             <p><span className="font-medium">Quantity:</span> {config.quantity}</p>
+            {config.note && <p><span className="font-medium">Note:</span> {config.note}</p>}
           </div>
         </div>
         
@@ -82,6 +100,7 @@ export function QuoteItem({ item, onRemove, onUpdate }: QuoteItemProps) {
               <DialogContent>
                 <DialogHeader>
                   <DialogTitle>Edit Item</DialogTitle>
+                  <DialogDescription />
                 </DialogHeader>
                 <div className="space-y-4 py-4">
                   <div className="space-y-2">
@@ -117,6 +136,16 @@ export function QuoteItem({ item, onRemove, onUpdate }: QuoteItemProps) {
                       min="1"
                       value={editConfig.quantity}
                       onChange={(e) => setEditConfig({...editConfig, quantity: Number(e.target.value)})}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Note</label>
+                    <Input 
+                      type="text"
+                      placeholder="Add a note for this item"
+                      value={editConfig.note || ''}
+                      onChange={(e) => setEditConfig({...editConfig, note: e.target.value})}
                     />
                   </div>
                   

@@ -112,24 +112,56 @@ SelectLabel.displayName = SelectPrimitive.Label.displayName
 const SelectItem = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Item>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Item>
->(({ className, children, ...props }, ref) => (
-  <SelectPrimitive.Item
-    ref={ref}
-    className={cn(
-      "relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
-      className
-    )}
-    {...props}
-  >
-    <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
-      <SelectPrimitive.ItemIndicator>
-        <Check className="h-4 w-4" />
-      </SelectPrimitive.ItemIndicator>
-    </span>
-
-    <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
-  </SelectPrimitive.Item>
-))
+>(({ className, children, value, ...props }, ref) => {
+  // Fix for empty values - ensure value is never empty
+  let finalValue = value;
+  
+  // Special cases for "None" values - allow these to be empty strings
+  const isNoneOption = 
+    children === 'All Categories' || 
+    children === 'None' || 
+    children === 'None (Top Level)';
+    
+  // If value is empty and this isn't a "None" option, generate a fallback value
+  if ((finalValue === '' || finalValue === undefined || finalValue === null) && !isNoneOption) {
+    if (typeof children === 'string') {
+      // Use the text content as the value
+      finalValue = children;
+    } else {
+      // If children isn't a string, use a unique ID as value
+      finalValue = `option-${Math.random().toString(36).substring(2, 9)}`;
+    }
+    
+    // Log in development only
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn(
+        '[SelectItem] Automatically fixing empty value for:',
+        children,
+        'New value:',
+        finalValue
+      );
+    }
+  }
+  
+  return (
+    <SelectPrimitive.Item
+      ref={ref}
+      className={cn(
+        "relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+        className
+      )}
+      value={finalValue}
+      {...props}
+    >
+      <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
+        <SelectPrimitive.ItemIndicator>
+          <Check className="h-4 w-4" />
+        </SelectPrimitive.ItemIndicator>
+      </span>
+      <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
+    </SelectPrimitive.Item>
+  );
+})
 SelectItem.displayName = SelectPrimitive.Item.displayName
 
 const SelectSeparator = React.forwardRef<

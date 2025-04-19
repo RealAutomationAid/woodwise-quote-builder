@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Eye } from "lucide-react";
 import { QuoteItemType } from "@/components/quote/quote-item";
@@ -34,7 +33,7 @@ export function QuoteHistoryTable({ quotes, onViewQuote }: QuoteHistoryTableProp
   if (quotes.length === 0) {
     return (
       <div className="text-center py-8 border rounded-md bg-white">
-        <p className="text-muted-foreground">No quote history found.</p>
+        <p className="text-muted-foreground">Няма намерени оферти.</p>
       </div>
     );
   }
@@ -44,11 +43,11 @@ export function QuoteHistoryTable({ quotes, onViewQuote }: QuoteHistoryTableProp
       <table className="w-full">
         <thead className="bg-muted/50">
           <tr>
-            <th className="px-4 py-3 text-left font-medium text-sm">Quote ID</th>
-            <th className="px-4 py-3 text-left font-medium text-sm">Date</th>
-            <th className="px-4 py-3 text-left font-medium text-sm">Total Price</th>
-            <th className="px-4 py-3 text-left font-medium text-sm">Status</th>
-            <th className="px-4 py-3 text-right font-medium text-sm">Actions</th>
+            <th className="px-4 py-3 text-left font-medium text-sm">ID на оферта</th>
+            <th className="px-4 py-3 text-left font-medium text-sm">Дата</th>
+            <th className="px-4 py-3 text-left font-medium text-sm">Обща цена</th>
+            <th className="px-4 py-3 text-left font-medium text-sm">Статус</th>
+            <th className="px-4 py-3 text-right font-medium text-sm">Действия</th>
           </tr>
         </thead>
         <tbody className="divide-y">
@@ -56,7 +55,7 @@ export function QuoteHistoryTable({ quotes, onViewQuote }: QuoteHistoryTableProp
             <tr key={quote.id}>
               <td className="px-4 py-3">{quote.id}</td>
               <td className="px-4 py-3">{quote.date}</td>
-              <td className="px-4 py-3">${quote.totalPrice.toFixed(2)}</td>
+              <td className="px-4 py-3">{quote.totalPrice.toFixed(2)} лв.</td>
               <td className="px-4 py-3">
                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColor[quote.status]}`}>
                   {statusLabel[quote.status]}
@@ -69,7 +68,7 @@ export function QuoteHistoryTable({ quotes, onViewQuote }: QuoteHistoryTableProp
                   onClick={() => onViewQuote && onViewQuote(quote.id)}
                 >
                   <Eye className="h-4 w-4 mr-1" />
-                  View
+                  Виж
                 </Button>
               </td>
             </tr>
